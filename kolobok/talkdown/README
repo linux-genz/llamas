@@ -1,0 +1,7 @@
+To build the test:
+make
+
+To run the test:
+sudo insmod kern_recv.ko
+./user_send
+dmesg | tail -20
