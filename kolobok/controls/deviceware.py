@@ -1,5 +1,10 @@
 #!/usr/bin/python3.6
+import subprocess as SP
+import logging
+from subprocess import PIPE
+from kolobok import talkdown_path
 
+logging.basicConfig(level=logging.DEBUG)
 
 class Device:
     '''
@@ -11,7 +16,7 @@ class Device:
         self._data: dict = json_data
 
         self.kernel_msg = self.notify_kernel()
-        self.handle_kernel_response(kernel_msg)
+        # self.handle_kernel_response(self.kernel_msg)
 
 
     def notify_kernel(self):
@@ -19,7 +24,12 @@ class Device:
             Send a message about the device state to a kernal and return its
         response (success of fail)
         '''
-        raise NotImplementedError('notify_kernel - not today. Come back tomorrow.')
+        cmd = [talkdown_path, '--gcid', '8888', '--cclass', '1111']
+        process = SP.Popen(cmd, stdout=PIPE, stderr=PIPE, encoding="utf-8")
+        std_out, std_err = process.communicate()
+
+        logging.info(' > user_send.c STD_OUT:\n%s', std_out)
+        return 'No message'
 
 
     def handle_kernel_response(self, msg):
@@ -48,5 +58,3 @@ class Device:
 
 if __name__ == '__main__':
     d = Device({})
-    print(d.cuuid)
-    print(d.suuid)

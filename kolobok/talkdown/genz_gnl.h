@@ -7,6 +7,15 @@ enum {
 	GENZ_A_UUID,
 	__GENZ_A_MAX,
 };
+
+
+/* Message Props used in user_send to consolidate parameters received by kernel. */
+struct MsgProps {
+    char* uuid;
+    char* cclass;
+    char* gcid;
+};
+
 #define GENZ_A_MAX (__GENZ_A_MAX - 1)
 
 /* Netlink Generic Commands */

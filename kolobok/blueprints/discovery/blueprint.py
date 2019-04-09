@@ -8,6 +8,7 @@ from pdb import set_trace
 
 import flask_fat
 from kolobok.utils import sys_utils
+from kolobok.controls import deviceware
 Journal = self = flask_fat.Journal(__file__, url_prefix='/api/v1')
 
 
