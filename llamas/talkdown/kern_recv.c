@@ -13,32 +13,33 @@ static struct nla_policy genz_genl_policy[GENZ_A_MAX + 1] = {
     [GENZ_A_UUID] = { .len = UUID_LEN },
 };
 
-
-/* Netlink Generic Handler */
+/* Netlink Generic Handler: return 0 on success else -ESOMETHING */
 static int genz_add_component(struct sk_buff *skb, struct genl_info *info){
-    /*
-     * message handling code goes here; return 0 on success,
-     * negative value on failure.
-     */
+    int retval = 0;
+
+    pr_info("%s: message from port ID %u\n", __FUNCTION__, info->snd_portid);
     if (!info->attrs[GENZ_A_GCID]) {
-        printk(KERN_ERR "empty message from %d\n",
-            info->snd_portid);
-    }
+        pr_err("\tmissing GCID\n");
+	retval = -ENOMSG;
+    } else
+	pr_info("\tGCID = %d\n", nla_get_u32(info->attrs[GENZ_A_GCID]));
 
-    printk(KERN_INFO "Port: %u GCID: %d ", info->snd_portid,
-        nla_get_u32(info->attrs[GENZ_A_GCID]));
-
-    if (info->attrs[GENZ_A_CCLASS]) {
-        printk(KERN_INFO "\tC-Class = %d\n",
-            (uint32_t) nla_get_u32(info->attrs[GENZ_A_CCLASS]));
-    }
-    if (info->attrs[GENZ_A_UUID]) {
+    if (!info->attrs[GENZ_A_CCLASS]) {
+        pr_err("\tmissing CCLASS\n");
+	retval = -ENOMSG;
+    } else
+        pr_info("\tC-Class = %u\n", nla_get_u32(info->attrs[GENZ_A_CCLASS]));
+    
+    if (!info->attrs[GENZ_A_UUID]) {
+        pr_err("\tmissing UUID\n");
+	retval = -ENOMSG;
+    } else {
         uint8_t * uuid;
 
         uuid = nla_data(info->attrs[GENZ_A_UUID]);
-        printk(KERN_INFO "\tUUID: %pUL\n", uuid);
+        pr_info("\tUUID @ 0x%p\n", uuid);
     }
-    return 0;
+    return retval;
 }//genz_add_component
 
 
@@ -47,6 +48,7 @@ static int genz_remove_component(struct sk_buff *skb, struct genl_info *info){
      * message handling code goes here; return 0 on success,
      * negative value on failure.
      */
+    pr_info("Remove component\n");
     return 0;
 }//genz_remove_component
 
@@ -56,6 +58,7 @@ static int genz_symlink_component(struct sk_buff *skb, struct genl_info *info){
      * message handling code goes here; return 0 on success,
      * negative value on failure.
      */
+    pr_info("Symlink component\n");
     return 0;
 }//genz_symlink_component
 
