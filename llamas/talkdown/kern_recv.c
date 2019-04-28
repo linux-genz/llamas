@@ -13,55 +13,48 @@ static struct nla_policy genz_genl_policy[GENZ_A_MAX + 1] = {
     [GENZ_A_UUID] = { .len = UUID_LEN },
 };
 
+void getattrs(const char *funcname, struct genl_info *info,
+	      struct nlattr **GCID,
+	      struct nlattr **CCLASS,
+	      struct nlattr **UUID)
+{
+    pr_info("%s: message seq=%d port ID=%u\n",
+    	funcname, info->snd_seq, info->snd_portid);
+    if (!(*GCID = info->attrs[GENZ_A_GCID]))
+        pr_err("\tmissing GCID\n");
+    else
+	pr_info("\tGCID = %d\n", nla_get_u32(*GCID));
+    if (!(*CCLASS = info->attrs[GENZ_A_CCLASS]))
+        pr_err("\tmissing CCLASS\n");
+    else
+	pr_info("\tCCLASS = %d\n", nla_get_u32(*CCLASS));
+    if (!(*UUID = info->attrs[GENZ_A_UUID]))
+        pr_err("\tmissing UUID\n");
+    else
+        pr_info("\tUUID @ 0x%p\n", *UUID);
+}
+
 /* Netlink Generic Handler: return 0 on success else -ESOMETHING */
 static int genz_add_component(struct sk_buff *skb, struct genl_info *info){
-    int retval = 0;
+    struct nlattr *GCID, *CCLASS, *UUID;
 
-    pr_info("%s: message from port ID %u\n", __FUNCTION__, info->snd_portid);
-    if (!info->attrs[GENZ_A_GCID]) {
-        pr_err("\tmissing GCID\n");
-	retval = -ENOMSG;
-    } else
-	pr_info("\tGCID = %d\n", nla_get_u32(info->attrs[GENZ_A_GCID]));
-
-    if (!info->attrs[GENZ_A_CCLASS]) {
-        pr_err("\tmissing CCLASS\n");
-	retval = -ENOMSG;
-    } else
-        pr_info("\tC-Class = %u\n", nla_get_u32(info->attrs[GENZ_A_CCLASS]));
-    
-    if (!info->attrs[GENZ_A_UUID]) {
-        pr_err("\tmissing UUID\n");
-	retval = -ENOMSG;
-    } else {
-        uint8_t * uuid;
-
-        uuid = nla_data(info->attrs[GENZ_A_UUID]);
-        pr_info("\tUUID @ 0x%p\n", uuid);
-    }
-    return retval;
+    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
 }//genz_add_component
 
-
 static int genz_remove_component(struct sk_buff *skb, struct genl_info *info){
-    /*
-     * message handling code goes here; return 0 on success,
-     * negative value on failure.
-     */
-    pr_info("Remove component\n");
-    return 0;
+    struct nlattr *GCID, *CCLASS, *UUID;
+
+    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
 }//genz_remove_component
 
-
 static int genz_symlink_component(struct sk_buff *skb, struct genl_info *info){
-    /*
-     * message handling code goes here; return 0 on success,
-     * negative value on failure.
-     */
-    pr_info("Symlink component\n");
-    return 0;
-}//genz_symlink_component
+    struct nlattr *GCID, *CCLASS, *UUID;
 
+    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
+}//genz_symlink_component
 
 /* Netlink Generic Operations */
 static struct genl_ops genz_gnl_ops[] = {
