@@ -1,25 +1,18 @@
-#include "genz_gnl.h"
-#include <ctype.h>
-#include <errno.h>
-#include <getopt.h>
-#include <linux/netlink.h>
-#include <malloc.h>
-#include <netlink/attr.h>
-#include <netlink/genl/ctrl.h>
-#include <netlink/genl/genl.h>
-#include <netlink/msg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/time.h>
 #include <unistd.h>
+#include <errno.h>
+#include <getopt.h>
+#include <netlink/genl/ctrl.h>
+#include <netlink/genl/genl.h>
+
+#include "genz_genl.h"
 
 // static char *message = "add@media,gcid=23,serial_number=sssjjkkh90,c-uuid=abdc-dkkl-sdkla-ppsk";
 // static uint32_t gcid = 58;
 // static uint16_t cclass = 13;
-static uint8_t uuid[16] = {0x48, 0x13, 0xea, 0x5f, 0x07, 0x4e, 0x4b, 0xe2, 0xa3, 0x55, 0xa3, 0x54, 0x14, 0x5c, 0x99, 0x27};
 
+static uint8_t uuid[16] = {0x48, 0x13, 0xea, 0x5f, 0x07, 0x4e, 0x4b, 0xe2, 0xa3, 0x55, 0xa3, 0x54, 0x14, 0x5c, 0x99, 0x27};
 
 static int send_msg_to_kernel(
 	struct nl_sock *sock, int family_id, struct MsgProps *props){
@@ -171,22 +164,21 @@ struct MsgProps* parseArgs(int argc, char *argv[]) {
         }//switch
     }//while
 
+    if (props->gcid == NULL)
+        props->gcid = "-1";
+    if (props->cclass == NULL)
+        props->cclass = "-1";
     return props;
 }//parseArgs
 
 int main(int argc, char *argv[]){
     struct nl_sock* nlsock = NULL;
-    struct nl_cb *cb = NULL;
     int family_id, ret;
     struct MsgProps* props;
 
     printf("--- USER_SEND MAIN PID = %d (0x%x) ---\n", getpid(), getpid());
 
     props = parseArgs(argc, argv);
-    if (props->gcid == NULL)
-        props->gcid = "-1";
-    if (props->cclass == NULL)
-        props->cclass = "-1";
 
     printf("--- UserSend called with gcid=%s; cclass=%s ---\n",
     	props->gcid, props->cclass);

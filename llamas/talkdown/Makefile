@@ -7,11 +7,11 @@ NL_LIBS_l=$(shell $(PKG_CONFIG) --libs-only-l $(NL_LIBNAME))
 
 KDIR := /lib/modules/$(shell uname -r)/build
 
-obj-m += kern_recv.o
+obj-m += genz_genl.o
 
 all:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
-	gcc -Werror -I/usr/include/libnl3 user_send.c -o user_send -lnl-3 -lnl-genl-3
+	gcc -Wall -I/usr/include/libnl3 user_send.c -o user_send -lnl-3 -lnl-genl-3
 
 clean:
 	${MAKE} -C ${KDIR} M=$(PWD) clean
