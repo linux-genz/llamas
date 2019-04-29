@@ -10,10 +10,9 @@ KDIR := /lib/modules/$(shell uname -r)/build
 obj-m += kern_recv.o
 
 all:
-	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-	gcc -I /usr/include/libnl3 user_send.c -o user_send -lnl-3 -lnl-genl-3
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+	gcc -Werror -I/usr/include/libnl3 user_send.c -o user_send -lnl-3 -lnl-genl-3
 
 clean:
-	rm -rf *.o *.ko *.mod.* *.cmd .module* modules* Module* .*.cmd .tmp*
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
-	rm user_send
+	${MAKE} -C ${KDIR} M=$(PWD) clean
+	rm -f user_send
