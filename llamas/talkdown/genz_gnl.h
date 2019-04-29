@@ -11,9 +11,9 @@ enum {
 
 /* Message Props used in user_send to consolidate parameters received by kernel. */
 struct MsgProps {
-    char* uuid;
-    char* cclass;
     char* gcid;
+    char* cclass;
+    char* uuid;
 };
 
 #define GENZ_A_MAX (__GENZ_A_MAX - 1)

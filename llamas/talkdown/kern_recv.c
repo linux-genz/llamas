@@ -8,53 +8,90 @@
 
 /* Netlink Generic Attribute Policy */
 static struct nla_policy genz_genl_policy[GENZ_A_MAX + 1] = {
+    [GENZ_A_UNSPEC] = { },
     [GENZ_A_GCID] = { .type = NLA_U32 },
     [GENZ_A_CCLASS] = { .type = NLA_U16 },
     [GENZ_A_UUID] = { .len = UUID_LEN },
 };
 
-void getattrs(const char *funcname, struct genl_info *info,
-	      struct nlattr **GCID,
-	      struct nlattr **CCLASS,
-	      struct nlattr **UUID)
+static int getattrs(const char *funcname, struct genl_info *info,
+		    uint32_t *GCID, uint16_t *CCLASS, uint8_t **UUID)
 {
-    pr_info("%s: message seq=%d port ID=%u\n",
-    	funcname, info->snd_seq, info->snd_portid);
-    if (!(*GCID = info->attrs[GENZ_A_GCID]))
-        pr_err("\tmissing GCID\n");
-    else
-	pr_info("\tGCID = %d\n", nla_get_u32(*GCID));
-    if (!(*CCLASS = info->attrs[GENZ_A_CCLASS]))
-        pr_err("\tmissing CCLASS\n");
-    else
-	pr_info("\tCCLASS = %d\n", nla_get_u32(*CCLASS));
-    if (!(*UUID = info->attrs[GENZ_A_UUID]))
-        pr_err("\tmissing UUID\n");
-    else
-        pr_info("\tUUID @ 0x%p\n", *UUID);
+	struct nlattr *tmp;
+	int errors = 0;
+
+	pr_info("%s: message port ID=%u seq=%u\n",
+		funcname, info->snd_portid, info->snd_seq);
+
+	if (!(tmp = info->attrs[GENZ_A_GCID])) {
+		pr_err("\tmissing GCID\n");
+		errors++;
+	} else {
+		*GCID = nla_get_u32(tmp);
+		pr_info("\tGCID = %u\n", *GCID);
+	}
+
+	if (!(tmp = info->attrs[GENZ_A_CCLASS])) {
+		pr_err("\tmissing CCLASS\n");
+		errors++;
+	} else {
+		*CCLASS = nla_get_u16(tmp);
+		pr_info("\tCCLASS = %u\n", *CCLASS);
+	}
+
+	if (!(tmp = info->attrs[GENZ_A_UUID])) {
+		pr_err("\tmissing UUID\n");
+		errors++;
+		*UUID = NULL;	// safe from inadvertent kfree
+	} else {
+		*UUID = nla_memdup(tmp, GFP_KERNEL);
+		pr_info("\tUUID = ");
+		pr_cont("%016lu", (uint64_t)(*UUID));
+		pr_info("\n");
+	}
+	if (errors && *UUID) {
+		kfree(*UUID);
+		*UUID = NULL;
+	}
+	return errors;
 }
 
 /* Netlink Generic Handler: return 0 on success else -ESOMETHING */
-static int genz_add_component(struct sk_buff *skb, struct genl_info *info){
-    struct nlattr *GCID, *CCLASS, *UUID;
+static int genz_add_component(struct sk_buff *skb, struct genl_info *info)
+{
+    uint32_t GCID;
+    uint16_t CCLASS;
+    uint8_t *UUID;	// must be kfree'd
+    int errors;
 
-    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
-    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
-}//genz_add_component
+    errors = getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    if (UUID) kfree(UUID);
+    return errors ? -ENOMSG : 0;
+}
 
-static int genz_remove_component(struct sk_buff *skb, struct genl_info *info){
-    struct nlattr *GCID, *CCLASS, *UUID;
+static int genz_remove_component(struct sk_buff *skb, struct genl_info *info)
+{
+    uint32_t GCID;
+    uint16_t CCLASS;
+    uint8_t *UUID;	// must be kfree'd
+    int errors;
 
-    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
-    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
-}//genz_remove_component
+    errors = getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    if (UUID) kfree(UUID);
+    return errors ? -ENOMSG : 0;
+}
 
-static int genz_symlink_component(struct sk_buff *skb, struct genl_info *info){
-    struct nlattr *GCID, *CCLASS, *UUID;
+static int genz_symlink_component(struct sk_buff *skb, struct genl_info *info)
+{
+    uint32_t GCID;
+    uint16_t CCLASS;
+    uint8_t *UUID;	// must be kfree'd
+    int errors;
 
-    getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
-    return GCID && CCLASS && UUID ? 0 : -ENOMSG;
-}//genz_symlink_component
+    errors = getattrs(__FUNCTION__, info, &GCID, &CCLASS, &UUID);
+    if (UUID) kfree(UUID);
+    return errors ? -ENOMSG : 0;
+}
 
 /* Netlink Generic Operations */
 static struct genl_ops genz_gnl_ops[] = {
