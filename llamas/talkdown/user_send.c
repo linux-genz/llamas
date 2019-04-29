@@ -1,38 +1,26 @@
-#include "genz_gnl.h"
-#include <ctype.h>
-#include <errno.h>
-#include <getopt.h>
-#include <linux/netlink.h>
-#include <malloc.h>
-#include <netlink/attr.h>
-#include <netlink/genl/ctrl.h>
-#include <netlink/genl/genl.h>
-#include <netlink/msg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/time.h>
 #include <unistd.h>
+#include <errno.h>
+#include <getopt.h>
+#include <netlink/genl/ctrl.h>
+#include <netlink/genl/genl.h>
+
+#include "genz_genl.h"
 
 // static char *message = "add@media,gcid=23,serial_number=sssjjkkh90,c-uuid=abdc-dkkl-sdkla-ppsk";
 // static uint32_t gcid = 58;
 // static uint16_t cclass = 13;
+
 static uint8_t uuid[16] = {0x48, 0x13, 0xea, 0x5f, 0x07, 0x4e, 0x4b, 0xe2, 0xa3, 0x55, 0xa3, 0x54, 0x14, 0x5c, 0x99, 0x27};
 
-
-static int send_msg_to_kernel(struct nl_sock *sock, struct MsgProps *props){
+static int send_msg_to_kernel(
+	struct nl_sock *sock, int family_id, struct MsgProps *props){
     struct nl_msg* msg;
-    int family_id, err = 0;
+    int err = 0;
     int gcid = atoi(props->gcid);
     int cclass = atoi(props->cclass);
     // int uuid = atoi(props->uuid);
-
-    family_id = genl_ctrl_resolve(sock, GENZ_FAMILY_NAME);
-    if(family_id < 0){
-        fprintf(stderr, "Unable to resolve family name to send a message!\n");
-        exit(EXIT_FAILURE);
-    }
 
     msg = nlmsg_alloc();
     if (!msg) {
@@ -40,8 +28,15 @@ static int send_msg_to_kernel(struct nl_sock *sock, struct MsgProps *props){
         exit(EXIT_FAILURE);
     }
 
-    if(!genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, family_id, 0,
-        NLM_F_REQUEST, GENZ_C_ADD_COMPONENT, 0)) {
+    if(!genlmsg_put(
+		msg,
+		getpid(),
+		NL_AUTO_SEQ,
+		family_id,
+		GENZ_GENL_USER_HEADER_SIZE,
+		NLM_F_REQUEST,
+		GENZ_C_ADD_COMPONENT,
+		GENZ_GENL_VERSION)) {
         fprintf(stderr, "failed to put nl hdr!\n");
         err = -ENOMEM;
         goto out;
@@ -76,17 +71,16 @@ static int send_msg_to_kernel(struct nl_sock *sock, struct MsgProps *props){
 }//send_msg_to_kernel
 
 
-static void prep_nl_sock(struct nl_sock** nlsock){
-    int family_id, grp_id;
-    unsigned int bit = 0;
+static int prep_nl_sock(struct nl_sock** nlsock) {
+    int family_id = -1;
 
     *nlsock = nl_socket_alloc();
-    if(!*nlsock) {
+    if (!*nlsock) {
         fprintf(stderr, "Unable to alloc nl socket!\n");
-        exit(EXIT_FAILURE);
+	goto exit_err;
     }
 
-    /* disable seq checks on multicast sockets */
+    /* https://www.infradead.org/~tgr/libnl/doc/api/auto_ack_warning.html */
     nl_socket_disable_seq_check(*nlsock);
     nl_socket_disable_auto_ack(*nlsock);
 
@@ -97,17 +91,21 @@ static void prep_nl_sock(struct nl_sock** nlsock){
     }
 
     /* resolve the generic nl family id*/
-    family_id = genl_ctrl_resolve(*nlsock, GENZ_FAMILY_NAME);
-    if(family_id < 0){
-        fprintf(stderr, "Unable to resolve family name to open a socket!\n");
+    family_id = genl_ctrl_resolve(*nlsock, GENZ_GENL_FAMILY_NAME);
+    if (family_id < 0) {
+        fprintf(stderr, "Unable to resolve family name \"%s\"!\n",
+		GENZ_GENL_FAMILY_NAME);
         goto exit_err;
     }
 
-    return;
+    return family_id;
 
-    exit_err:
-        nl_socket_free(*nlsock); // this call closes the socket as well
-        exit(EXIT_FAILURE);
+exit_err:
+    if (*nlsock) {
+    	nl_socket_free(*nlsock); // this call closes the socket as well
+	*nlsock = NULL;
+    }
+    return family_id;
 }//prep_nl_sock
 
 
@@ -166,26 +164,28 @@ struct MsgProps* parseArgs(int argc, char *argv[]) {
         }//switch
     }//while
 
-    return props;
-}//parseArgs
-
-
-
-int main(int argc, char *argv[]){
-    printf("--- USER_SEND MAIN ---\n");
-    struct nl_sock* nlsock = NULL;
-    struct nl_cb *cb = NULL;
-    int ret;
-    struct MsgProps* props = parseArgs(argc, argv);
     if (props->gcid == NULL)
         props->gcid = "-1";
     if (props->cclass == NULL)
         props->cclass = "-1";
+    return props;
+}//parseArgs
 
-    printf("--- UserSend called with gcid=%s; cclass=%s ---\n", props->gcid, props->cclass);
-    prep_nl_sock(&nlsock);
-    ret = send_msg_to_kernel(nlsock, props);
+int main(int argc, char *argv[]){
+    struct nl_sock* nlsock = NULL;
+    int family_id, ret;
+    struct MsgProps* props;
+
+    printf("--- USER_SEND MAIN PID = %d (0x%x) ---\n", getpid(), getpid());
+
+    props = parseArgs(argc, argv);
+
+    printf("--- UserSend called with gcid=%s; cclass=%s ---\n",
+    	props->gcid, props->cclass);
+    if ((family_id = prep_nl_sock(&nlsock)) < 0)
+    	exit(EXIT_FAILURE);
+    ret = send_msg_to_kernel(nlsock, family_id, props);
     nl_socket_free(nlsock);
 
-    return 6666;
+    exit(ret);
 }//main
