@@ -13,7 +13,7 @@ MODULE_LICENSE("GPL");
 static struct nla_policy genz_nla_policy[] = {
     [GENZ_A_GCID] = { .type = NLA_U32 },
     [GENZ_A_CCLASS] = { .type = NLA_U16 },
-    [GENZ_A_UUID] = { .len = UUID_LEN },
+    [GENZ_A_UUID] = { .len = UUID_LEN }
 };
 
 /* Netlink Generic Handler: parse command and attributes and choose (in)action.
@@ -83,7 +83,8 @@ static int genz_genl_dispatch(struct sk_buff *skb, struct genl_info *info)
 
 	if (UUID)
 		kfree(UUID);
-	return errors ? -EBADMSG : 0;
+	pr_info("Exiting %s, errors=%d\n", __FUNCTION__, errors);
+	return errors ? -EMEDIUMTYPE : 0;
 }
 
 /* Netlink Generic Operations, registered to the kernel to direct requests. */
@@ -110,9 +111,9 @@ static struct genl_family genz_genl_family = {
     .name = GENZ_GENL_FAMILY_NAME,
     .version = GENZ_GENL_VERSION,
     .hdrsize = GENZ_GENL_USER_HEADER_SIZE,
-    .maxattr = ARRAY_SIZE(genz_nla_policy),
+    .maxattr = ARRAY_SIZE_AS_GOD_INTENDED(genz_nla_policy),
     .ops = genz_genl_ops,
-    .n_ops = ARRAY_SIZE(genz_genl_ops)
+    .n_ops = ARRAY_SIZE_AS_GOD_INTENDED(genz_genl_ops)
 };//genz_genl_family
 
 static int __init genz_genl_init(void) {
