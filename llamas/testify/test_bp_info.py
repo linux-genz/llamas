@@ -8,7 +8,7 @@ from app_test import AppTesting
 from llamas import llamas_api
 # MODULE_PATH = os.path.dirname(kolobok_api.__file__)
 
-class TestImports(AppTesting):
+class TestInfoBp(AppTesting):
 
     def setUp(self):
         pass
