@@ -15,10 +15,10 @@ HTTP_HEADERS = {
 #Allow generating Random data when can't ping offshore API.
 # ALLOW_SPOOF = False
 
-ENDPOINTS_BASE = 'http://localhost:5000/redfish/v1/'
+ENDPOINTS_BASE = 'http://localhost:1234/'
 ENDPOINTS = {
     'base' : ENDPOINTS_BASE,
-    'events' : 'EventService',
+    'event_add' : 'add/subscribe',
     'systems' : 'Systems',
     'registries' : 'Registries'
 }

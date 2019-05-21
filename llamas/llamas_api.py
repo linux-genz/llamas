@@ -5,7 +5,7 @@ import json
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
 import flask_fat
-from . import talkdown
+from llamas import talkdown
 
 
 class LlamasServer(flask_fat.APIBaseline):

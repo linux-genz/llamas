@@ -7,6 +7,7 @@ __all__ = [ basename(f)[:-3] for f in modules if isfile(f) and not f.startswith(
 
 # from . import utils
 # from . import talkdown
+# talkdown = talkdown
 
 # talkdown_path = abspath(__file__)
 # talkdown_path = dirname(talkdown_path)
