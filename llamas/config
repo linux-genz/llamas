@@ -15,10 +15,16 @@ HTTP_HEADERS = {
 #Allow generating Random data when can't ping offshore API.
 # ALLOW_SPOOF = False
 
-ENDPOINTS_BASE = 'http://localhost:1234/'
+_base_url = 'http://localhost:1234/'
 ENDPOINTS = {
-    'base' : ENDPOINTS_BASE,
+    'base' : _base_url,
     'event_add' : 'add/subscribe',
     'systems' : 'Systems',
     'registries' : 'Registries'
 }
+
+"""
+[optional] Time in seconds to wait to check for ENPOINTS' 'event_*' subscribtion
+if failed to subscribe/ping endpoint on this server's start.
+"""
+SUBSCRIBE_INTERVAL = 2

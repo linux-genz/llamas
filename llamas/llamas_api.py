@@ -2,11 +2,12 @@
 import argparse
 import os
 import json
+import logging
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
 import flask_fat
 from llamas import talkdown
-
+logging.basicConfig(level=logging.DEBUG)
 
 class LlamasServer(flask_fat.APIBaseline):
 
@@ -15,8 +16,10 @@ class LlamasServer(flask_fat.APIBaseline):
         this_file = os.path.abspath(__file__)
         this_dir = os.path.dirname(this_file)
         cfg_path = os.path.join(this_dir, 'alpaka.cfg')
-        self.zookeeper = talkdown.Talker(config=cfg_path)
-
+        try:
+            self.zookeeper = talkdown.Talker(config=cfg_path)
+        except Exception as err:
+            logging.error('--- Failed creating zookeeper! ---\n%s' % err)
 
 def parse_cmd():
     parser = argparse.ArgumentParser()
