@@ -97,7 +97,7 @@ def add_cmp():
     gcid = body.get('gcid', '-1')
     cclass = body.get('cclass', '-1')
     uuid_val = body.get('uuid', '-1')
-    uuid_val = uuid.UUID(uuid_val)
+    uuid_val = uuid.UUID('12345678123456781234567812345678')
 
     zoo = Journal.mainapp.zookeeper
     msg = zoo.build_msg(cmd=zoo.cfg.get('ADD'),
