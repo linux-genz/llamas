@@ -18,7 +18,21 @@ class Talker(alpaka.ZooKeeper):
 
 
     def build_msg(self, **kwargs):
-        """ Overriding ZooKeeper's function. """
+        """ Overriding ZooKeeper's function.
+        output: {
+            'cmd': 1,
+            'version': 1,
+            'reserved': 0,
+            'attrs': [
+                    ['GENZ_A_GCID', 4242],
+                    ['GENZ_A_CCLASS', 43],
+                    ['GENZ_A_UUID', b'\t\xc6{/L\xc9N\xec\x93X&\xce\xae\x8e\xbe\xda']
+                ],
+                'value': <class 'pyroute2.netlink.NotInitialized'>,
+            'header': {},
+            'pid': 20365
+        }
+        """
         cmd = kwargs['cmd']
         GCID = kwargs['gcid']
         CCLASS = kwargs['cclass']
