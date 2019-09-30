@@ -61,7 +61,7 @@ def YodelAyHeHUUID(random=True):
 
 
 if __name__ == "__main__":
-    genznl = Talker(config='/home/bender/dev/llamas/llamas/config')
+    genznl = Talker(config='../config')
     UUID = YodelAyHeHUUID()
     msg = genznl.build_msg(cmd=genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
