@@ -1,0 +1,1 @@
+cmd_/home/bender/dev/llamas/llamas/POC/genz_genl.ko := ld -r -m elf_x86_64 -z max-page-size=0x200000 -T ./scripts/module-common.lds --build-id  -o /home/bender/dev/llamas/llamas/POC/genz_genl.ko /home/bender/dev/llamas/llamas/POC/genz_genl.o /home/bender/dev/llamas/llamas/POC/genz_genl.mod.o ;  true

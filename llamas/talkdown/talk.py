@@ -2,6 +2,7 @@
 import ctypes
 import socket
 import uuid
+import logging
 import os
 from pprint import pprint
 
@@ -17,7 +18,7 @@ class Talker(alpaka.ZooKeeper):
         super().__init__(*args, **kwargs)
 
 
-    def build_msg(self, **kwargs):
+    def build_msg(self, cmd, **kwargs):
         """ Overriding ZooKeeper's function.
         output: {
             'cmd': 1,
@@ -33,7 +34,9 @@ class Talker(alpaka.ZooKeeper):
             'pid': 20365
         }
         """
-        cmd = kwargs['cmd']
+        super().build_msg(cmd, **kwargs)
+
+        # cmd = kwargs['cmd']
         GCID = kwargs['gcid']
         CCLASS = kwargs['cclass']
         UUID = kwargs['uuid']
@@ -75,9 +78,10 @@ def YodelAyHeHUUID(random=True):
 
 
 if __name__ == "__main__":
-    genznl = Talker(config='../config')
+    genznl = Talker()
+    # genznl = Talker(config='../config')
     UUID = YodelAyHeHUUID()
-    msg = genznl.build_msg(cmd=genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
+    msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
     try:
         # If it works, get a packet.  If not, raise an error.
