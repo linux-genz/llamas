@@ -2,6 +2,7 @@
 import ctypes
 import socket
 import uuid
+import logging
 import os
 from pprint import pprint
 
@@ -17,9 +18,25 @@ class Talker(alpaka.ZooKeeper):
         super().__init__(*args, **kwargs)
 
 
-    def build_msg(self, **kwargs):
-        """ Overriding ZooKeeper's function. """
-        cmd = kwargs['cmd']
+    def build_msg(self, cmd, **kwargs):
+        """ Overriding ZooKeeper's function.
+        output: {
+            'cmd': 1,
+            'version': 1,
+            'reserved': 0,
+            'attrs': [
+                    ['GENZ_A_GCID', 4242],
+                    ['GENZ_A_CCLASS', 43],
+                    ['GENZ_A_UUID', b'\t\xc6{/L\xc9N\xec\x93X&\xce\xae\x8e\xbe\xda']
+                ],
+                'value': <class 'pyroute2.netlink.NotInitialized'>,
+            'header': {},
+            'pid': 20365
+        }
+        """
+        super().build_msg(cmd, **kwargs)
+
+        # cmd = kwargs['cmd']
         GCID = kwargs['gcid']
         CCLASS = kwargs['cclass']
         UUID = kwargs['uuid']
@@ -61,9 +78,10 @@ def YodelAyHeHUUID(random=True):
 
 
 if __name__ == "__main__":
-    genznl = Talker(config='../config')
+    genznl = Talker()
+    # genznl = Talker(config='../config')
     UUID = YodelAyHeHUUID()
-    msg = genznl.build_msg(cmd=genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
+    msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
     try:
         # If it works, get a packet.  If not, raise an error.
