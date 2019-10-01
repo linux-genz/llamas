@@ -7,6 +7,8 @@ __python__
 *.ko.cmd
 *.cache.mk
 *.o
+*.o.cmd
+*.mod.c
 *.symvers
 modules.order
-POC/user_send
+/llamas/POC/user_send
