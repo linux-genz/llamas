@@ -2,3 +2,11 @@
 __python__
 *.pyc
 .vscode
+.tmp_versions
+*.ko
+*.ko.cmd
+*.cache.mk
+*.o
+*.symvers
+modules.order
+POC/user_send
