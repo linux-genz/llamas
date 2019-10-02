@@ -6,7 +6,7 @@ import logging
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
 import flask_fat
-from llamas import talkdown
+from llamas import middleware
 logging.basicConfig(level=logging.DEBUG)
 
 class LlamasServer(flask_fat.APIBaseline):
@@ -17,9 +17,11 @@ class LlamasServer(flask_fat.APIBaseline):
         this_dir = os.path.dirname(this_file)
         cfg_path = os.path.join(this_dir, 'alpaka.cfg')
         try:
-            self.zookeeper = talkdown.Talker(config=cfg_path)
+            self.netlink = middleware.NetlinkManager(config=cfg_path)
         except Exception as err:
-            logging.error('--- Failed creating zookeeper! ---\n%s' % err)
+            msg = 'Failed creating NetlinkManager! ->\n%s' % err
+            logging.error(msg)
+            raise RuntimeError(msg)
 
 def parse_cmd():
     parser = argparse.ArgumentParser()
@@ -39,7 +41,7 @@ def main(args=None):
     cmd = parse_cmd()
     args.update(cmd)
 
-    mainapp = LlamasServer('./config', **args)
+    mainapp = LlamasServer('./llamas.cfg', **args)
     if not args.get('dont_run', False):
         mainapp.run()
     return mainapp

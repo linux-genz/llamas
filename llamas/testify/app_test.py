@@ -9,6 +9,6 @@ MODULE_PATH = os.path.dirname(llamas.__file__)
 
 class AppTesting(unittest.TestCase):
 
-    CONFIG_PATH = os.path.join(MODULE_PATH, 'config')
+    CONFIG_PATH = os.path.join(MODULE_PATH, 'llamas.cfg')
     ALPAKA_CFG_PATH = os.path.join(MODULE_PATH, 'alpaka.cfg')
 

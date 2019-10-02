@@ -5,21 +5,21 @@ import uuid
 import logging
 import os
 from pprint import pprint
-
-from pyroute2.common import map_namespace
-
-import alpaka
 from pdb import set_trace
 
+# from pyroute2.common import map_namespace
 
-class Talker(alpaka.ZooKeeper):
+import alpaka
+
+
+class NetlinkManager(alpaka.Messenger):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
     def build_msg(self, cmd, **kwargs):
-        """ Overriding ZooKeeper's function.
+        """ Overriding alpaka's function.
         output: {
             'cmd': 1,
             'version': 1,
@@ -34,25 +34,46 @@ class Talker(alpaka.ZooKeeper):
             'pid': 20365
         }
         """
+        data = kwargs.get('data', None)
+        msg = {}
+        attrs = []
+
+        err_msg = 'build_msg required "%s" parameter is None or missing!'
+        if cmd is None:
+            logging.error(err_msg % 'cmd')
+            return None
+        if data is None:
+            logging.error(err_msg % 'data')
+            return None
+
+        cmd_index = self.cfg.cmd_opts.get(cmd)
+
+        contract = self.cfg.get('CONTRACT', {}).get(cmd_index)
+        if contract is None:
+            contract = data
+
+        #Convert a data structure into the parameters that kernel understands
+        for key, value in data.items():
+            nl_key_name = contract[key] #key must be there at this point
+            if isinstance(value, str):
+                if value.isdigit():
+                    #parse digit str into float or int. Assume '.' in str is a float.
+                    if '.' in value: value = float(value)
+                    else: value = int(value)
+
+            #This is a Hack to extract UUID! Wait for a precedent to break this.
+            if 'uuid' in nl_key_name.lower():
+                value = uuid.UUID(str(value)).bytes
+
+            attrs.append([ nl_key_name, value ])
+
         super().build_msg(cmd, **kwargs)
 
-        # cmd = kwargs['cmd']
-        GCID = kwargs['gcid']
-        CCLASS = kwargs['cclass']
-        UUID = kwargs['uuid']
-
-        if not isinstance(UUID, uuid.UUID):
-            raise RuntimeError('UUID must be type uuid.UUID')
-
         msg = self.msg_model()
-        msg['cmd'] = self.cfg.cmd_opts[cmd]
+        msg['attrs'] = attrs
+        msg['cmd'] = cmd_index
         msg['pid'] = os.getpid()
         msg['version'] = self.cfg.version
-
-        # The policy map in the kernel code says always send three.
-        msg['attrs'].append([ 'GENZ_A_GCID', GCID ])
-        msg['attrs'].append([ 'GENZ_A_CCLASS', CCLASS ])
-        msg['attrs'].append([ 'GENZ_A_UUID', UUID.bytes ])
 
         return msg
 
@@ -78,10 +99,11 @@ def YodelAyHeHUUID(random=True):
 
 
 if __name__ == "__main__":
-    genznl = Talker()
+    genznl = NetlinkManager()
     # genznl = Talker(config='../config')
     UUID = YodelAyHeHUUID()
     msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
+    print(msg)
     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
     try:
         # If it works, get a packet.  If not, raise an error.
