@@ -37,14 +37,15 @@ class DeviceJournal(flask_fat.Journal):
 
 
     def subscribe_to_redfish(self):
-        cfg = self.mainapp.config
-        port = cfg['PORT']
-        url = posixpath.join(cfg['ENDPOINTS']['base'], cfg['ENDPOINTS']['event_add'])
-        callback_endpoint = posixpath.join('http://',
-                                '%s:%s' % (socket.gethostname(), port),
-                                'api/v1',
-                                self.name,
-                                'add')
+        pass
+        # cfg = self.mainapp.config
+        # port = cfg['PORT']
+        # url = posixpath.join(cfg['ENDPOINTS']['base'], cfg['ENDPOINTS']['event_add'])
+        # callback_endpoint = posixpath.join('http://',
+        #                         '%s:%s' % (socket.gethostname(), port),
+        #                         'api/v1',
+        #                         self.name,
+        #                         'add')
         # data = {
         #     '@odata.context': '/redfish/v1/$metadata#EventDestination.EventDestination',
         #     '@odata.id': '/redfish/v1/EventService',
@@ -63,53 +64,51 @@ class DeviceJournal(flask_fat.Journal):
         #     'Context': 'Device add event',
         #     'Protocol': 'Redfish'
         # }
-        data = {
-            'callback' : callback_endpoint
-        }
-        try:
-            HTTP_REQUESTS.post(url, data)
-            self._is_pinging = False
-            logging.info('--- Subscribed to callback at %s' % callback_endpoint)
-        except Exception:
-            logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
-            if not self._is_pinging:
-                self._is_pinging = True
-                self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
+        # data = {
+        #     'callback' : callback_endpoint
+        # }
+        # try:
+        #     HTTP_REQUESTS.post(url, data)
+        #     self._is_pinging = False
+        #     logging.info('--- Subscribed to callback at %s' % callback_endpoint)
+        # except Exception:
+        #     logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
+        #     if not self._is_pinging:
+        #         self._is_pinging = True
+        #         self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
 
 
 Journal = self = DeviceJournal(__file__, url_prefix='/api/v1')
 
 
-''' ------------------------------- ROUTES ------------------------------- '''
+""" ------------------------------- ROUTES ------------------------------- """
 
 
 @Journal.BP.route('/%s/add' % (Journal.name), methods=['POST'])
 def add_cmp():
-    '''
+    """
         Return nodes ID this API is running on.
-    '''
+    @param req.body: {
+        'gcid' : <value>,
+        'cclass' : <value>,
+        'uuid' : <value>,
+    }
+    """
     logging.info('%s/add route is called.' % Journal.name)
-    response = {}
+    response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
     status = 'nothing happened'
     code = 300
 
+    nl = Journal.mainapp.netlink
     body = flask.request.form
-    gcid = body.get('gcid', '-1')
-    cclass = body.get('cclass', '-1')
-    uuid_val = body.get('uuid', '-1')
-    uuid_val = uuid.UUID('12345678123456781234567812345678')
+    cmd_name = nl.cfg.get('ADD')
 
-    zoo = Journal.mainapp.zookeeper
-    msg = zoo.build_msg(cmd=zoo.cfg.get('ADD'),
-                        gcid=int(gcid),
-                        cclass=int(cclass),
-                        uuid=uuid_val)
+    msg = nl.build_msg(cmd_name, data=body)
 
-    logging.info('Sending PID=%d UUID=%s' % (msg['pid'], str(uuid_val)))
-
+    logging.info('Sending PID=%d; cmd=%s' % (msg['pid'], cmd_name))
     try:
         # If it works, get a packet.  If not, raise an error.
-        retval = zoo.sendmsg(msg)
+        retval = nl.sendmsg(msg)
         resperr = retval[0]['header']['error']
         if resperr:
             logging.error(retval)
@@ -122,6 +121,20 @@ def add_cmp():
         response['error'] = str(exc)
         code = 401
 
-    response['status'] = status
+    if code < 300:
+        response['msg'] = {
+            'cmd' : msg['cmd'],
+            #convert pyroute2.netlink.nla_slot into tuple
+            'attr' : [tuple(item) for item in msg['attrs']]
+        }
 
+    response['status'] = status
     return flask.make_response(flask.jsonify(response), code)
+
+
+def request_to_netlink(body, netlink_cmd):
+    """
+    """
+    result = {}
+    for key_name in body.keys():
+        print(key_name)
