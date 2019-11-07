@@ -2,11 +2,11 @@
 import flask
 import os
 import json
-import jsonschema
-import posixpath
+# import jsonschema
+# import posixpath
 import requests as HTTP_REQUESTS
 import logging
-import uuid
+# import uuid
 import socket
 import time
 import threading
@@ -129,12 +129,4 @@ def add_cmp():
         }
 
     response['status'] = status
-    return flask.make_response(flask.jsonify(response), code)
-
-
-def request_to_netlink(body, netlink_cmd):
-    """
-    """
-    result = {}
-    for key_name in body.keys():
-        print(key_name)
+    return flask.make_response(flask.jsonify(str(response)), code)

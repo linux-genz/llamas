@@ -25,7 +25,7 @@ class TestDeviceBp(AppTesting):
 
         self.assertTrue(result.status_code < 300,
                         'Status code %s' % result.status_code)
-
+        print('\n----- TestDeviceBp: test_add_cmp ----')
         print(result.json)
 
 

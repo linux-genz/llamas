@@ -4,6 +4,8 @@ import socket
 import uuid
 import logging
 import os
+from pyroute2.netlink.rtnl.ifaddrmsg import ifaddrmsg
+
 from pprint import pprint
 from pdb import set_trace
 
@@ -35,9 +37,9 @@ class NetlinkManager(alpaka.Messenger):
         }
         """
         data = kwargs.get('data', None)
-        msg = {}
+        # msg = {}
+        # msg = ifaddrmsg()
         attrs = []
-
         err_msg = 'build_msg required "%s" parameter is None or missing!'
         if cmd is None:
             logging.error(err_msg % 'cmd')
@@ -52,29 +54,59 @@ class NetlinkManager(alpaka.Messenger):
         if contract is None:
             contract = data
 
-        #Convert a data structure into the parameters that kernel understands
-        for key, value in data.items():
-            nl_key_name = contract[key] #key must be there at this point
-            if isinstance(value, str):
-                if value.isdigit():
-                    #parse digit str into float or int. Assume '.' in str is a float.
-                    if '.' in value: value = float(value)
-                    else: value = int(value)
-
-            #This is a Hack to extract UUID! Wait for a precedent to break this.
-            if 'uuid' in nl_key_name.lower():
-                value = uuid.UUID(str(value)).bytes
-
-            attrs.append([ nl_key_name, value ])
-
         super().build_msg(cmd, **kwargs)
-
         msg = self.msg_model()
+
+        #Convert a data structure into the parameters that kernel understands
+        # for key, value in data.items():
+        #     nl_key_name = contract[key] #key must be there at this point
+        #     if isinstance(value, str):
+        #         if value.isdigit():
+        #             #parse digit str into float or int. Assume '.' in str is a float.
+        #             if '.' in value: value = float(value)
+        #             else: value = int(value)
+
+        #     #This is a Hack to extract UUID! Wait for a precedent to break this.
+        #     if 'uuid' in nl_key_name.lower():
+        #         value = uuid.UUID(str(value)).bytes
+
+        #     attrs.append([ nl_key_name, value ])
+
+        # attrs.append(['GENZ_A_FABRIC_NUM', 2])
+        attrs.append(['GENZ_A_CCLASS', 13])
+        # attrs.append(['GENZ_A_GCID', 58])
+        # attrs.append(['GENZ_A_FRU_UUID', '12345678123456781234567812345678'])
+        # attrs.append(['GENZ_A_MGR_UUID', '82345678123456781234567812345679'])
+
+        attrs.append([
+            'GENZ_A_RESOURCE_LIST', {
+                'attrs' : [
+                    [
+                        'GENZ_A_UL', {
+                            'attrs' : [
+                                ['GENZ_A_U_UUID', '12345678123456781234567812345678'],
+                                ['GENZ_A_U_CLASS', 66],
+                            ]
+                        }
+                    ]
+                ],#attrs
+
+                # 'attrs' : [
+                #     [
+                #         'GENZ_A_UL', {
+                #             'GENZ_A_U_UUID' : '12345678123456781234567812345678',
+                #             'GENZ_A_U_CLASS' : 2,
+                #         }
+                #     ]
+                # ],#attrs
+            }#resource list
+        ])
+
         msg['attrs'] = attrs
         msg['cmd'] = cmd_index
         msg['pid'] = os.getpid()
         msg['version'] = self.cfg.version
-
+        # msg.encode()
         return msg
 
 
@@ -103,13 +135,13 @@ if __name__ == "__main__":
     # genznl = Talker(config='../config')
     UUID = YodelAyHeHUUID()
     msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
-    print(msg)
     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
     try:
         # If it works, get a packet.  If not, raise an error.
         retval = genznl.sendmsg(msg)
         resperr = retval[0]['header']['error']
         if resperr:
+            print('--------!!netlink_mngr: __main__!!!-------')
             pprint(retval)
             raise RuntimeError(resperr)
         print('Success')
