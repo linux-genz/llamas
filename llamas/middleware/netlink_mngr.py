@@ -4,14 +4,12 @@ import socket
 import uuid
 import logging
 import os
-from pyroute2.netlink.rtnl.ifaddrmsg import ifaddrmsg
 
 from pprint import pprint
 from pdb import set_trace
 
-# from pyroute2.common import map_namespace
-
 import alpaka
+from llamas.message_model import MessageModel
 
 
 class NetlinkManager(alpaka.Messenger):
@@ -37,8 +35,6 @@ class NetlinkManager(alpaka.Messenger):
         }
         """
         data = kwargs.get('data', None)
-        # msg = {}
-        # msg = ifaddrmsg()
         attrs = []
         err_msg = 'build_msg required "%s" parameter is None or missing!'
         if cmd is None:
@@ -54,6 +50,7 @@ class NetlinkManager(alpaka.Messenger):
         if contract is None:
             contract = data
 
+        kwargs['model'] = MessageModel
         super().build_msg(cmd, **kwargs)
         msg = self.msg_model()
 
@@ -72,11 +69,30 @@ class NetlinkManager(alpaka.Messenger):
 
         #     attrs.append([ nl_key_name, value ])
 
-        # attrs.append(['GENZ_A_FABRIC_NUM', 2])
+        attrs.append(['GENZ_A_FABRIC_NUM', 22])
         attrs.append(['GENZ_A_CCLASS', 13])
-        # attrs.append(['GENZ_A_GCID', 58])
-        # attrs.append(['GENZ_A_FRU_UUID', '12345678123456781234567812345678'])
-        # attrs.append(['GENZ_A_MGR_UUID', '82345678123456781234567812345679'])
+        attrs.append(['GENZ_A_GCID', 58])
+        attrs.append(['GENZ_A_FRU_UUID', '12345678123456781234567812345678'])
+        attrs.append(['GENZ_A_MGR_UUID', '82345678123456781234567812345679'])
+
+        GENZ_A_MRL = ['GENZ_A_MRL', {
+                        'attrs' :
+                        [
+                            ['GENZ_A_MR_START', 0xdeadbeefdeadbeef],
+                            ['GENZ_A_MR_LENGTH', 4096],
+                            ['GENZ_A_MR_TYPE', 1],
+                        ]
+                    },
+                ]
+
+        mrl_list = [
+            'GENZ_A_U_MRL', {
+                'attrs' : [
+                    GENZ_A_MRL,
+                    GENZ_A_MRL
+                    ],#attrs
+            }#resource list
+        ]
 
         attrs.append([
             'GENZ_A_RESOURCE_LIST', {
@@ -86,19 +102,11 @@ class NetlinkManager(alpaka.Messenger):
                             'attrs' : [
                                 ['GENZ_A_U_UUID', '12345678123456781234567812345678'],
                                 ['GENZ_A_U_CLASS', 66],
+                                mrl_list,
                             ]
-                        }
-                    ]
+                        },
+                    ],
                 ],#attrs
-
-                # 'attrs' : [
-                #     [
-                #         'GENZ_A_UL', {
-                #             'GENZ_A_U_UUID' : '12345678123456781234567812345678',
-                #             'GENZ_A_U_CLASS' : 2,
-                #         }
-                #     ]
-                # ],#attrs
             }#resource list
         ])
 
@@ -106,7 +114,6 @@ class NetlinkManager(alpaka.Messenger):
         msg['cmd'] = cmd_index
         msg['pid'] = os.getpid()
         msg['version'] = self.cfg.version
-        # msg.encode()
         return msg
 
 
