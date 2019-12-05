@@ -98,13 +98,16 @@ def add_cmp():
     response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
     status = 'nothing happened'
     code = 300
-
     nl = Journal.mainapp.netlink
     body = flask.request.form
+    if not body:
+        #this happenes when using flask's test_client. It stors post data into
+        #.data as a json string.
+        body = json.loads(flask.request.data)
+
     cmd_name = nl.cfg.get('ADD')
 
     msg = nl.build_msg(cmd_name, data=body)
-
     logging.info('Sending PID=%d; cmd=%s' % (msg['pid'], cmd_name))
     try:
         # If it works, get a packet.  If not, raise an error.

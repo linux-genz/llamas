@@ -1,0 +1,26 @@
+{
+    "add": {
+        "fabric": ["GENZ_A_FABRIC_NUM",    "uint32"],
+        "cclass": ["GENZ_A_CCLASS",  "uint16"],
+        "gcid": ["GENZ_A_GCID",    "uint32"],
+        "fru_uuid": ["GENZ_A_FRU_UUID",    "string"],
+        "mgr_uuid": ["GENZ_A_MGR_UUID",    "string"],
+        "resources": [
+            "GENZ_A_RESOURCE_LIST",
+            {
+                "uuid": ["GENZ_A_U_UUID", "string"],
+                "class": ["GENZ_A_U_CLASS", "uint16"],
+                "memory": [
+                "GENZ_A_U_MRL",
+                {
+                    "start": ["GENZ_A_MR_START", "uint64"],
+                    "length": ["GENZ_A_MR_LENGTH", "uint64"],
+                    "type": ["GENZ_A_MR_TYPE", "uint8"],
+                    "ro_rkey": ["GENZ_A_MR_RO_RKEY", "uint32"],
+                    "rw_rkey": ["GENZ_A_MR_RW_RKEY", "uint32"]
+                }
+                ]
+            }
+        ]
+    }
+}

@@ -1,7 +1,29 @@
 from pyroute2.netlink import nla, genlmsg
 
 
-class MessageModel(genlmsg):
+# class ModelAddComponent(genlmsg):
+#     """
+#         The set of all Netlink Attributes (NLAs) that could be passed.
+#     This is the analog of the kernel "struct nla_policy".
+#     """
+
+#     # Zero-based arrays are sort-of needed here, but also somewhat frowned
+#     # upon. This needs further research, maybe in pyroute2 itself.
+#     nla_map = None
+
+#     class resources(nla):
+#         nla_map = None
+
+#         class resource_entry(nla):
+#             nla_map = None
+
+#             class mrl(nla):
+#                 nla_map = None
+
+#                 class mrl_entry(nla):
+#                     nla_map = None
+
+class ModelAddComponent(genlmsg):
     """
         The set of all Netlink Attributes (NLAs) that could be passed.
     This is the analog of the kernel "struct nla_policy".
@@ -9,8 +31,15 @@ class MessageModel(genlmsg):
 
     # Zero-based arrays are sort-of needed here, but also somewhat frowned
     # upon. This needs further research, maybe in pyroute2 itself.
-    nla_map = None
-
+    nla_map = (
+        ('UnUsed',            'none'),
+        ('GENZ_A_FABRIC_NUM',    'uint32'),
+        ('GENZ_A_GCID',    'uint32'),
+        ('GENZ_A_CCLASS',  'uint16'),
+        ('GENZ_A_FRU_UUID',    'string'),
+        ('GENZ_A_MGR_UUID',    'string'),
+        ('GENZ_A_RESOURCE_LIST', 'resources'),
+    ),
 
     class resources(nla):
         nla_map = (

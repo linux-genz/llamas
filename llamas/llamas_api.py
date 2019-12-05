@@ -16,12 +16,12 @@ class LlamasServer(flask_fat.APIBaseline):
         this_file = os.path.abspath(__file__)
         this_dir = os.path.dirname(this_file)
         cfg_path = os.path.join(this_dir, 'alpaka.cfg')
-        try:
-            self.netlink = middleware.NetlinkManager(config=cfg_path)
-        except Exception as err:
-            msg = 'Failed creating NetlinkManager! ->\n%s' % err
-            logging.error(msg)
-            raise RuntimeError(msg)
+        # try:
+        self.netlink = middleware.NetlinkManager(config=cfg_path)
+        # except Exception as err:
+        #     msg = 'Failed creating NetlinkManager! ->\n%s' % err
+        #     logging.error(msg)
+        #     raise RuntimeError(msg)
 
 def parse_cmd():
     parser = argparse.ArgumentParser()

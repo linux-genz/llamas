@@ -9,7 +9,7 @@ from pprint import pprint
 from pdb import set_trace
 
 import alpaka
-from llamas.message_model import MessageModel
+from llamas.message_model.add_component import ModelAddComponent
 
 
 class NetlinkManager(alpaka.Messenger):
@@ -19,6 +19,21 @@ class NetlinkManager(alpaka.Messenger):
 
 
     def build_msg(self, cmd, **kwargs):
+        """
+            @param cmd->data: {
+                'gcid': init.uuid.gcid,
+                'cclass': 11, # block storage (non-boot)
+                'fabric': 5,
+                'mgr_uuid': '9af8190f-1b4c-4be8-8732-e8d48e883396',
+                'fru_uuid': 0,
+
+                'resources': {
+                    'uuid': str(init.uuid),
+                    'class': 0x2, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
+                    'memory': memory
+                },
+            }
+        """
         """ Overriding alpaka's function.
         output: {
             'cmd': 1,
@@ -50,7 +65,7 @@ class NetlinkManager(alpaka.Messenger):
         if contract is None:
             contract = data
 
-        kwargs['model'] = MessageModel
+        kwargs['model'] = ModelAddComponent
         super().build_msg(cmd, **kwargs)
         msg = self.msg_model()
 
@@ -69,28 +84,32 @@ class NetlinkManager(alpaka.Messenger):
 
         #     attrs.append([ nl_key_name, value ])
 
-        attrs.append(['GENZ_A_FABRIC_NUM', 22])
-        attrs.append(['GENZ_A_CCLASS', 13])
-        attrs.append(['GENZ_A_GCID', 58])
-        attrs.append(['GENZ_A_FRU_UUID', '12345678123456781234567812345678'])
-        attrs.append(['GENZ_A_MGR_UUID', '82345678123456781234567812345679'])
+        attrs.append(['GENZ_A_FABRIC_NUM', data['fabric']])
+        attrs.append(['GENZ_A_CCLASS', data['cclass']])
+        attrs.append(['GENZ_A_GCID', data['gcid']])
+        attrs.append(['GENZ_A_FRU_UUID', data['fru_uuid']])
+        attrs.append(['GENZ_A_MGR_UUID', data['mgr_uuid']])
 
-        GENZ_A_MRL = ['GENZ_A_MRL', {
-                        'attrs' :
-                        [
-                            ['GENZ_A_MR_START', 0xdeadbeefdeadbeef],
-                            ['GENZ_A_MR_LENGTH', 4096],
-                            ['GENZ_A_MR_TYPE', 1],
-                        ]
-                    },
-                ]
+        #FIXME: the message building below needs to be refactored somehow for
+        #better usability and reusability
+        mrl_attrs = []
+        for memory in data['resources']['memory']:
+            pprint(memory)
+            GENZ_A_MRL = ['GENZ_A_MRL', {
+                    'attrs' :
+                    [
+                        ['GENZ_A_MR_CLASS', memory['cclass']],
+                        ['GENZ_A_MR_START', memory['start']],
+                        ['GENZ_A_MR_LENGTH', memory['length']],
+                        ['GENZ_A_MR_TYPE', memory['type']],
+                    ]
+                },
+            ]#GENZ_A_MRL
+            mrl_attrs.append(GENZ_A_MRL)
 
         mrl_list = [
             'GENZ_A_U_MRL', {
-                'attrs' : [
-                    GENZ_A_MRL,
-                    GENZ_A_MRL
-                    ],#attrs
+                'attrs' : mrl_attrs
             }#resource list
         ]
 
@@ -100,8 +119,8 @@ class NetlinkManager(alpaka.Messenger):
                     [
                         'GENZ_A_UL', {
                             'attrs' : [
-                                ['GENZ_A_U_UUID', '12345678123456781234567812345678'],
-                                ['GENZ_A_U_CLASS', 66],
+                                ['GENZ_A_U_UUID', data['resources']['uuid']],
+                                ['GENZ_A_U_CLASS', data['resources']['class']],
                                 mrl_list,
                             ]
                         },
