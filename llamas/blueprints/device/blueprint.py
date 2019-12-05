@@ -3,7 +3,7 @@ import flask
 import os
 import json
 # import jsonschema
-# import posixpath
+import posixpath
 import requests as HTTP_REQUESTS
 import logging
 # import uuid
@@ -15,7 +15,6 @@ from pdb import set_trace
 import flask_fat
 
 class DeviceJournal(flask_fat.Journal):
-
 
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
@@ -37,45 +36,27 @@ class DeviceJournal(flask_fat.Journal):
 
 
     def subscribe_to_redfish(self):
-        pass
-        # cfg = self.mainapp.config
-        # port = cfg['PORT']
-        # url = posixpath.join(cfg['ENDPOINTS']['base'], cfg['ENDPOINTS']['event_add'])
-        # callback_endpoint = posixpath.join('http://',
-        #                         '%s:%s' % (socket.gethostname(), port),
-        #                         'api/v1',
-        #                         self.name,
-        #                         'add')
-        # data = {
-        #     '@odata.context': '/redfish/v1/$metadata#EventDestination.EventDestination',
-        #     '@odata.id': '/redfish/v1/EventService',
-        #     '@odata.type': '#EventService.v1_0_0.EventService',
+        cfg = self.mainapp.config
+        port = cfg['PORT']
+        url = cfg['ENDPOINTS']['event_add_cmp']
+        callback_endpoint = posixpath.join('http://',
+                                '%s:%s' % (socket.gethostname(), port),
+                                'api/v1',
+                                self.name,
+                                'add')
 
-        #     'Id': '1',
-        #     'Name': 'EventSubscription1',
-        #     'Description': 'asdfasdfasdf',
-
-        #     'RegistryPrefixes' : 'ResourceAdded',
-        #     'RegistryVersion' : '1.0.0',
-
-        #     'EventTypes' : [ 'ResourceAdded' ],
-        #     'Destination' : 'http://localhost:1991/%s/add' % Journal.name,
-
-        #     'Context': 'Device add event',
-        #     'Protocol': 'Redfish'
-        # }
-        # data = {
-        #     'callback' : callback_endpoint
-        # }
-        # try:
-        #     HTTP_REQUESTS.post(url, data)
-        #     self._is_pinging = False
-        #     logging.info('--- Subscribed to callback at %s' % callback_endpoint)
-        # except Exception:
-        #     logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
-        #     if not self._is_pinging:
-        #         self._is_pinging = True
-        #         self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
+        data = {
+            'callback' : callback_endpoint
+        }
+        try:
+            HTTP_REQUESTS.post(url, data)
+            self._is_pinging = False
+            logging.info('--- Subscribed to callback at %s' % callback_endpoint)
+        except Exception:
+            logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
+            if not self._is_pinging:
+                self._is_pinging = True
+                self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
 
 
 Journal = self = DeviceJournal(__file__, url_prefix='/api/v1')
@@ -106,7 +87,6 @@ def add_cmp():
         body = json.loads(flask.request.data)
 
     cmd_name = nl.cfg.get('ADD')
-
     msg = nl.build_msg(cmd_name, data=body)
     logging.info('Sending PID=%d; cmd=%s' % (msg['pid'], cmd_name))
     try:
