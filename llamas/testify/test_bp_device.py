@@ -17,23 +17,23 @@ class TestDeviceBp(AppTesting):
         url = '/api/v1/%s' % ('device/add')
 
         memory = {
-            'start': 0xdeadbeefdeadbeef,
-            'length': 2048,
+            'start': 0x100005cc00000,
+            'length': 0x40000000,
             'type': 0x0, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
             "cclass": 11, # block storage (non-boot)
         }#memory
 
         body = {
-            'gcid': random.randrange(1000, 7000),
-            'cclass': 11, # block storage (non-boot)
+            'gcid': 0,
+            'cclass': 9, # block storage (non-boot)
             'fabric': 5,
-            'mgr_uuid': '00000000-1111-2222-3333-444455556666',
-            'fru_uuid': '0',
-            'uuid': -1,
+            'mgr_uuid': '9af8190f-1b4c-4be8-8732-e8d48e883396',
+            'fru_uuid': '00000000-0000-0000-0000-000000000000',
 
             'resources': {
-                'uuid': '12345678123456781234567812345678',
-                'class': 0x2, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
+                'class_uuid': '3cb8d3bd-51ba-4586-835f-3548789dd906',
+                'instance_uuid': '00000012-7c98-4dd1-989f-64cfdaa3248e',
+                'class': 17, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
                 'memory': [memory]
             },
         }#body

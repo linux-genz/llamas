@@ -41,6 +41,11 @@ class ModelAddComponent(genlmsg):
         ('GENZ_A_RESOURCE_LIST', 'resources'),
     ),
 
+    # def encode(self):
+    #     from pdb import set_trace
+    #     set_trace()
+    #     fmt = '%s' % ('I' * 16)
+
     class resources(nla):
         nla_map = (
             ('GENZ_A_UL_UNSPEC', 'none'),
@@ -50,20 +55,22 @@ class ModelAddComponent(genlmsg):
         class resource_entry(nla):
             nla_map = (
                 ('GENZ_A_UL_UNSPEC', 'none'),
-                ('GENZ_A_U_UUID', 'string'),
+                ('GENZ_A_U_CLASS_UUID', 'string'),
+                ('GENZ_A_U_INSTANCE_UUID', 'string'),
                 ('GENZ_A_U_CLASS', 'uint16'),
                 ('GENZ_A_U_MRL', 'mrl'),
             )
 
+
             class mrl(nla):
                 nla_map = (
-                    ('GENZ_A_UL_UNSPEC', 'none'),
+                    ('GENZ_A_MRL_UNSPEC', 'none'),
                     ('GENZ_A_MRL', 'mrl_entry')
                 )
 
                 class mrl_entry(nla):
                     nla_map = (
-                        ('GENZ_A_UL_UNSPEC', 'none'),
+                        ('GENZ_A_MR_UNSPEC', 'none'),
                         ('GENZ_A_MR_START', 'uint64'),
                         ('GENZ_A_MR_LENGTH', 'uint64'),
                         ('GENZ_A_MR_TYPE', 'uint8'),

@@ -21,42 +21,42 @@ class DeviceJournal(flask_fat.Journal):
         self._is_pinging = False
 
 
-    def on_post_register(self):
-        self.subscribe_to_redfish()
+    # def on_post_register(self):
+    #     self.subscribe_to_redfish()
 
 
-    def check_event_server(self, iteration_time):
-        if not self._is_pinging:
-            return
-        #FIXME: this called twice per iteration. IDK why. Probably something obvious.
-        t = threading.Timer(iteration_time, self.check_event_server, [iteration_time])
-        print('Trying to subscribe to event... [%s]' % (time.ctime()))
-        self.subscribe_to_redfish()
-        t.start()
+    # def check_event_server(self, iteration_time):
+    #     if not self._is_pinging:
+    #         return
+    #     #FIXME: this called twice per iteration. IDK why. Probably something obvious.
+    #     t = threading.Timer(iteration_time, self.check_event_server, [iteration_time])
+    #     print('Trying to subscribe to event... [%s]' % (time.ctime()))
+    #     self.subscribe_to_redfish()
+    #     t.start()
 
 
-    def subscribe_to_redfish(self):
-        cfg = self.mainapp.config
-        port = cfg['PORT']
-        url = cfg['ENDPOINTS']['event_add_cmp']
-        callback_endpoint = posixpath.join('http://',
-                                '%s:%s' % (socket.gethostname(), port),
-                                'api/v1',
-                                self.name,
-                                'add')
+    # def subscribe_to_redfish(self):
+    #     cfg = self.mainapp.config
+    #     port = cfg['PORT']
+    #     url = cfg['ENDPOINTS']['event_add_cmp']
+    #     callback_endpoint = posixpath.join('http://',
+    #                             '%s:%s' % (socket.gethostname(), port),
+    #                             'api/v1',
+    #                             self.name,
+    #                             'add')
 
-        data = {
-            'callback' : callback_endpoint
-        }
-        try:
-            HTTP_REQUESTS.post(url, data)
-            self._is_pinging = False
-            logging.info('--- Subscribed to callback at %s' % callback_endpoint)
-        except Exception:
-            logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
-            if not self._is_pinging:
-                self._is_pinging = True
-                self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
+    #     data = {
+    #         'callback' : callback_endpoint
+    #     }
+    #     try:
+    #         HTTP_REQUESTS.post(url, data)
+    #         self._is_pinging = False
+    #         logging.info('--- Subscribed to callback at %s' % callback_endpoint)
+    #     except Exception:
+    #         logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
+    #         if not self._is_pinging:
+    #             self._is_pinging = True
+    #             self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
 
 
 Journal = self = DeviceJournal(__file__, url_prefix='/api/v1')
