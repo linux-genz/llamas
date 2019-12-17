@@ -41,10 +41,6 @@ class ModelAddComponent(genlmsg):
         ('GENZ_A_RESOURCE_LIST', 'resources'),
     ),
 
-    # def encode(self):
-    #     from pdb import set_trace
-    #     set_trace()
-    #     fmt = '%s' % ('I' * 16)
 
     class resources(nla):
         nla_map = (

@@ -88,9 +88,7 @@ class NetlinkManager(alpaka.Messenger):
         attrs.append(['GENZ_A_CCLASS', data['cclass']])
         attrs.append(['GENZ_A_GCID', data['gcid']])
         attrs.append(['GENZ_A_FRU_UUID', uuid_str_to_bytearray(data['fru_uuid'])])
-        # attrs.append(['GENZ_A_FRU_UUID', data['fru_uuid']])
         attrs.append(['GENZ_A_MGR_UUID', uuid_str_to_bytearray(data['mgr_uuid'])])
-        # attrs.append(['GENZ_A_MGR_UUID', data['mgr_uuid']])
 
         #FIXME: the message building below needs to be refactored somehow for
         #better usability and reusability
@@ -123,10 +121,8 @@ class NetlinkManager(alpaka.Messenger):
                             'attrs' : [
                                 #hardcoded value: 3cb8d3bd-51ba-4586-835f-3548789dd906
                                 ['GENZ_A_U_CLASS_UUID', uuid_str_to_bytearray(data['resources']['class_uuid'])],
-                                # ['GENZ_A_U_CLASS_UUID', data['resources']['class_uuid']],
                                 #set by useing user_send3 --uuid param
                                 ['GENZ_A_U_INSTANCE_UUID', uuid_str_to_bytearray(data['resources']['instance_uuid'])],
-                                # ['GENZ_A_U_INSTANCE_UUID', data['resources']['instance_uuid']],
                                 ['GENZ_A_U_CLASS', data['resources']['class']],
                                 mrl_list,
                             ]
@@ -140,65 +136,55 @@ class NetlinkManager(alpaka.Messenger):
         msg['cmd'] = cmd_index
         msg['pid'] = os.getpid()
         msg['version'] = self.cfg.version
-        pprint(msg)
         return msg
 
 
 def uuid_str_to_bytearray(uuid_str):
-    # uuid_str = '3cb8d3bd-51ba-4586-835f-3548789dd906'.replace('-', '')
-    # uuid_bytes = bytearray(uuid_str, 'utf-8')
-    # # return uuid_bytes
-    # decoded = uuid_bytes.decode()
-    # output = ''
-    # for i in range(len(decoded)):
-    #     if i % 2 == 0 and i > 0:
-    #         output += ' %s' % decoded[i]
-    #     else:
-    #         output += decoded[i]
-    # result = [int(val, 16) for val in output.split(' ')]
-    # return result
+    """
+        Convert a UUID string format (e.g. 00000000-0000-0000-0000-000000000000)
+    into bytes that netlink pyroute2 library can understand and send properly.
+    """
     uuid_obj = uuid.UUID(uuid_str)
     bytes = uuid_obj.bytes
     return bytes
 
 
+# def YodelAyHeHUUID(random=True):
+#     """Return a uuid.UUID object."""
+#     if random:
+#         return uuid.uuid4()
 
-def YodelAyHeHUUID(random=True):
-    """Return a uuid.UUID object."""
-    if random:
-        return uuid.uuid4()
+#     # Pick your favorite constructor, and refactor this routine accordingly.
 
-    # Pick your favorite constructor, and refactor this routine accordingly.
-
-    this = uuid.UUID('12345678123456781234567812345678')
-    this = uuid.UUID(int=0x12345678123456781234567812345678)
-    this = uuid.UUID('urn:uuid:12345678-1234-5678-1234-567812345678')
-    this = uuid.UUID(bytes=b'\x12\x34\x56\x78' * 4)
-    this = uuid.UUID(bytes_le=b'\x78\x56\x34\x12\x34\x12\x78\x56' +
-                            b'\x12\x34\x56\x78\x12\x34\x56\x78')
-    this = uuid.UUID(
-        fields=(0x12345678, 0x1234, 0x5678, 0x12, 0x34, 0x567812345678))
-    this = uuid.UUID('{12345678-1234-5678-1234-567812345678}')
-    this = uuid.UUID('12345678-1234-5678-1234-567812345678')
-    return this
+#     this = uuid.UUID('12345678123456781234567812345678')
+#     this = uuid.UUID(int=0x12345678123456781234567812345678)
+#     this = uuid.UUID('urn:uuid:12345678-1234-5678-1234-567812345678')
+#     this = uuid.UUID(bytes=b'\x12\x34\x56\x78' * 4)
+#     this = uuid.UUID(bytes_le=b'\x78\x56\x34\x12\x34\x12\x78\x56' +
+#                             b'\x12\x34\x56\x78\x12\x34\x56\x78')
+#     this = uuid.UUID(
+#         fields=(0x12345678, 0x1234, 0x5678, 0x12, 0x34, 0x567812345678))
+#     this = uuid.UUID('{12345678-1234-5678-1234-567812345678}')
+#     this = uuid.UUID('12345678-1234-5678-1234-567812345678')
+#     return this
 
 
-if __name__ == "__main__":
-    genznl = NetlinkManager()
-    # genznl = Talker(config='../config')
-    UUID = YodelAyHeHUUID()
-    msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
-    print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
-    try:
-        # If it works, get a packet.  If not, raise an error.
-        retval = genznl.sendmsg(msg)
-        resperr = retval[0]['header']['error']
-        if resperr:
-            print('--------!!netlink_mngr: __main__!!!-------')
-            pprint(retval)
-            raise RuntimeError(resperr)
-        print('Success')
-    except Exception as exc:
-        raise SystemExit(str(exc))
+# if __name__ == "__main__":
+#     genznl = NetlinkManager()
+#     # genznl = Talker(config='../config')
+#     UUID = YodelAyHeHUUID()
+#     msg = genznl.build_msg(genznl.cfg.get('ADD'), gcid=4242, cclass=43, uuid=UUID)
+#     print('Sending PID=%d UUID=%s' % (msg['pid'], str(UUID)))
+#     try:
+#         # If it works, get a packet.  If not, raise an error.
+#         retval = genznl.sendmsg(msg)
+#         resperr = retval[0]['header']['error']
+#         if resperr:
+#             print('--------!!netlink_mngr: __main__!!!-------')
+#             pprint(retval)
+#             raise RuntimeError(resperr)
+#         print('Success')
+#     except Exception as exc:
+#         raise SystemExit(str(exc))
 
-    raise SystemExit(0)
+#     raise SystemExit(0)

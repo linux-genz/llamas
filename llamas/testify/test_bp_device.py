@@ -17,7 +17,7 @@ class TestDeviceBp(AppTesting):
         url = '/api/v1/%s' % ('device/add')
 
         memory = {
-            'start': 0x100005cc00000,
+            'start': 281476859953152,
             'length': 0x40000000,
             'type': 0x0, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
             "cclass": 11, # block storage (non-boot)
@@ -32,7 +32,7 @@ class TestDeviceBp(AppTesting):
 
             'resources': {
                 'class_uuid': '3cb8d3bd-51ba-4586-835f-3548789dd906',
-                'instance_uuid': '00000012-7c98-4dd1-989f-64cfdaa3248e',
+                'instance_uuid': '0000001e-fc3b-4edf-aed9-fd20130cb7a3',
                 'class': 17, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
                 'memory': [memory]
             },
