@@ -2,11 +2,11 @@
 import flask
 import os
 import json
-import jsonschema
+# import jsonschema
 import posixpath
 import requests as HTTP_REQUESTS
 import logging
-import uuid
+# import uuid
 import socket
 import time
 import threading
@@ -16,11 +16,9 @@ import flask_fat
 
 class DeviceJournal(flask_fat.Journal):
 
-
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
-        self._is_pinging = False
-
+        self._is_pinging = True
 
     def on_post_register(self):
         self.subscribe_to_redfish()
@@ -37,45 +35,49 @@ class DeviceJournal(flask_fat.Journal):
 
 
     def subscribe_to_redfish(self):
-        pass
-        # cfg = self.mainapp.config
-        # port = cfg['PORT']
-        # url = posixpath.join(cfg['ENDPOINTS']['base'], cfg['ENDPOINTS']['event_add'])
-        # callback_endpoint = posixpath.join('http://',
-        #                         '%s:%s' % (socket.gethostname(), port),
-        #                         'api/v1',
-        #                         self.name,
-        #                         'add')
-        # data = {
-        #     '@odata.context': '/redfish/v1/$metadata#EventDestination.EventDestination',
-        #     '@odata.id': '/redfish/v1/EventService',
-        #     '@odata.type': '#EventService.v1_0_0.EventService',
+        if not self._is_pinging: #already subscribed
+            return
 
-        #     'Id': '1',
-        #     'Name': 'EventSubscription1',
-        #     'Description': 'asdfasdfasdf',
+        cfg = self.mainapp.config
+        port = cfg['PORT']
+        url = cfg['ENDPOINTS']['event_add_cmp']
+        this_hostname = self.mainapp.config.get('THIS_HOSTNAME', None)
+        if this_hostname is None:
+            this_hostname = socket.gethostname()
 
-        #     'RegistryPrefixes' : 'ResourceAdded',
-        #     'RegistryVersion' : '1.0.0',
+        callback_endpoint = posixpath.join('http://',
+                                '%s:%s' % (this_hostname, port),
+                                # '%s:%s' % ('localhost', port),
+                                'api/v1',
+                                self.name,
+                                'add')
 
-        #     'EventTypes' : [ 'ResourceAdded' ],
-        #     'Destination' : 'http://localhost:1991/%s/add' % Journal.name,
+        data = {
+            'callback' : callback_endpoint
+        }
 
-        #     'Context': 'Device add event',
-        #     'Protocol': 'Redfish'
-        # }
-        # data = {
-        #     'callback' : callback_endpoint
-        # }
-        # try:
-        #     HTTP_REQUESTS.post(url, data)
-        #     self._is_pinging = False
-        #     logging.info('--- Subscribed to callback at %s' % callback_endpoint)
-        # except Exception:
-        #     logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
-        #     if not self._is_pinging:
-        #         self._is_pinging = True
-        #         self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
+        try:
+            resp = HTTP_REQUESTS.post(url, data)
+        except Exception as err:
+            resp = None
+            logging.debug('subscribe_to_redfish(): %s' % err)
+
+        is_success = resp is not None and resp.status_code < 300
+
+        if is_success:
+            self._is_pinging = False
+            logging.info('--- Subscribed to %s to callback at %s' % \
+                        (url, callback_endpoint))
+        else:
+            logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
+            if resp is not None:
+                #FIXME: log the actuall status message from the response
+                logging.debug('subscription error reason [%s]: %s' %\
+                                (resp.status_code, resp.reason))
+
+            if not self._is_pinging:
+                self._is_pinging = True
+                self.check_event_server(cfg.get('SUBSCRIBE_INTERVAL', 5))
 
 
 Journal = self = DeviceJournal(__file__, url_prefix='/api/v1')
@@ -98,14 +100,18 @@ def add_cmp():
     response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
     status = 'nothing happened'
     code = 300
-
     nl = Journal.mainapp.netlink
     body = flask.request.form
-    cmd_name = nl.cfg.get('ADD')
+    if not body:
+        #this happenes when using flask's test_client. It stors post data into
+        #.data as a json string.
+        body = json.loads(flask.request.data)
 
+    cmd_name = nl.cfg.get('ADD')
     msg = nl.build_msg(cmd_name, data=body)
 
     logging.info('Sending PID=%d; cmd=%s' % (msg['pid'], cmd_name))
+    #FIXME: move this try/except into a function out of here
     try:
         # If it works, get a packet.  If not, raise an error.
         retval = nl.sendmsg(msg)
@@ -129,12 +135,4 @@ def add_cmp():
         }
 
     response['status'] = status
-    return flask.make_response(flask.jsonify(response), code)
-
-
-def request_to_netlink(body, netlink_cmd):
-    """
-    """
-    result = {}
-    for key_name in body.keys():
-        print(key_name)
+    return flask.make_response(flask.jsonify(str(response)), code)

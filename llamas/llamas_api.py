@@ -13,15 +13,15 @@ class LlamasServer(flask_fat.APIBaseline):
 
     def __init__(self, cfg, **kwargs):
         super().__init__(cfg, **kwargs)
-        this_file = os.path.abspath(__file__)
+        this_file = os.path.realpath(__file__)
         this_dir = os.path.dirname(this_file)
         cfg_path = os.path.join(this_dir, 'alpaka.cfg')
-        try:
-            self.netlink = middleware.NetlinkManager(config=cfg_path)
-        except Exception as err:
-            msg = 'Failed creating NetlinkManager! ->\n%s' % err
-            logging.error(msg)
-            raise RuntimeError(msg)
+        # try:
+        self.netlink = middleware.NetlinkManager(config=cfg_path)
+        # except Exception as err:
+        #     msg = 'Failed creating NetlinkManager! ->\n%s' % err
+        #     logging.error(msg)
+        #     raise RuntimeError(msg)
 
 def parse_cmd():
     parser = argparse.ArgumentParser()
@@ -41,7 +41,15 @@ def main(args=None):
     cmd = parse_cmd()
     args.update(cmd)
 
-    mainapp = LlamasServer('./llamas.cfg', **args)
+    config_path = os.path.realpath(__file__)
+    config_path = os.path.dirname(config_path)
+    config_path = os.path.join(config_path, 'llamas.cfg')
+
+    mainapp = LlamasServer(config_path, **args)
+    if args.get('verbose', False):
+        for endpoint in mainapp.app.url_map.iter_rules():
+            logging.info(endpoint.rule)
+
     if not args.get('dont_run', False):
         mainapp.run()
     return mainapp
