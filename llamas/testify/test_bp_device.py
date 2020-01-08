@@ -24,7 +24,7 @@ class TestDeviceBp(AppTesting):
         }#memory
 
         body = {
-            'gcid': 0,
+            'gcid': 1,
             'cclass': 9, # block storage (non-boot)
             'fabric': 5,
             'mgr_uuid': '9af8190f-1b4c-4be8-8732-e8d48e883396',
@@ -32,7 +32,7 @@ class TestDeviceBp(AppTesting):
 
             'resources': {
                 'class_uuid': '3cb8d3bd-51ba-4586-835f-3548789dd906',
-                'instance_uuid': '0000001e-fc3b-4edf-aed9-fd20130cb7a3',
+                'instance_uuid': '00000010-35c5-4bce-beed-614c026b2ac0',
                 'class': 17, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
                 'memory': [memory]
             },
