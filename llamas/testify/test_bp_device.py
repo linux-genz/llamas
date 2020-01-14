@@ -13,7 +13,7 @@ from app_test import AppTesting
 class TestDeviceBp(AppTesting):
 
     def test_add_cmp(self):
-        app = llamas_api.LlamasServer(self.CONFIG_PATH)
+        app = llamas_api.LlamasServer('llamas')
         url = '/api/v1/%s' % ('device/add')
 
         memory = {

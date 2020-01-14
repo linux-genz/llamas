@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 class LlamasServer(flask_fat.APIBaseline):
 
-    def __init__(self, cfg, **kwargs):
-        super().__init__(cfg, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         this_file = os.path.realpath(__file__)
         this_dir = os.path.dirname(this_file)
         cfg_path = os.path.join(this_dir, 'alpaka.cfg')
