@@ -41,11 +41,11 @@ def main(args=None):
     cmd = parse_cmd()
     args.update(cmd)
 
-    config_path = os.path.realpath(__file__)
-    config_path = os.path.dirname(config_path)
-    config_path = os.path.join(config_path, 'llamas.cfg')
+    # config_path = os.path.realpath(__file__)
+    # config_path = os.path.dirname(config_path)
+    # config_path = os.path.join(config_path, 'llamas.cfg')
 
-    mainapp = LlamasServer(config_path, **args)
+    mainapp = LlamasServer('llamas', **args)
     if args.get('verbose', False):
         for endpoint in mainapp.app.url_map.iter_rules():
             logging.info(endpoint.rule)
