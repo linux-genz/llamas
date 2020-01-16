@@ -29,7 +29,8 @@ def parse_cmd():
                         help='blueprints to be ignored/not-loaded by server. ' +\
                             '--ignore "bp1,bp2,bp2"', default=None)
 
-    parser.add_argument('--verbose', help='You know it.', action='store_true')
+    parser.add_argument('-v', '--verbosity', action='count', default=0,
+                        help='increase output verbosity')
     parsed = parser.parse_args()
     if parsed.ignore is not None:
         parsed.ignore = parsed.ignore.replace(' ', '').split(',')
