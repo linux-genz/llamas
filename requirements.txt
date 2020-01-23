@@ -1,3 +1,3 @@
 libnl >= 0.2.0
-git+https://github.hpe.com/atsugami-kun/flask-api-template#egg=flask-fat-0.1
+git+https://github.hpe.com/atsugami-kun/flask-api-template#egg=flask-fat-0.1.2
 git+https://github.hpe.com/atsugami-kun/python3-alpaka.git#egg=python3-alpaka-0.1
