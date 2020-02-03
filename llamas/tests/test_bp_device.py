@@ -13,7 +13,9 @@ from app_test import AppTesting
 class TestDeviceBp(AppTesting):
 
     def test_add_cmp(self):
-        app = llamas_api.LlamasServer('llamas')
+        app = llamas_api.LlamasServer('llamas',
+                                    cfg=self.CONFIG_PATH,
+                                    alpaka_cfg=self.ALPAKA_CFG_PATH)
         url = '/api/v1/%s' % ('device/add')
 
         memory = {

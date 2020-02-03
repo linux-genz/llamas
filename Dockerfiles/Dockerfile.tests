@@ -8,19 +8,18 @@ WORKDIR /app
 COPY . /app
 
 RUN export LANG=C.UTF-8
-RUN apt update -y && apt install -y python3-pip git
-
+# update repo and
 # Install any needed packages specified in requirements.txt
-RUN echo "---------- INSTALL TEST --------------"
-RUN pip3 install -e .
-RUN pip3 install -r requirements.txt
+RUN apt update -y && \
+    apt install -y python3-pip git && \
+    pip3 install . && \
+    pip3 install -r requirements.txt
 
-ENV target_dir ~/.local/lib/python3.6/site-packages
+ENV target_dir /app/llamas
 
 RUN ls -l ${target_dir}
-
-RUN echo "---------- UNITTESTS --------------"
 RUN /bin/bash ${target_dir}/tests/test_all.sh
 
-# Run app.py when the container launches
-CMD ["bash", ${target_dir} + "/tests/test_all.sh"]
+
+RUN echo " ------ UNINSTALL TEST ------"
+RUN curl -s https://raw.githubusercontent.com/ProjectVellum/vellum-utils/master/uninstall_test.sh | bash -s llamas llamas

@@ -6,14 +6,8 @@ from pdb import set_trace
 
 from app_test import AppTesting
 from llamas import llamas_api
-# MODULE_PATH = os.path.dirname(kolobok_api.__file__)
 
 class TestInfoBp(AppTesting):
-
-    def setUp(self):
-        pass
-        # self.app = flask.Flask(__name__)
-
 
     def test_get_id(self):
         # result = blueprint.get_id()
