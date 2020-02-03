@@ -11,7 +11,7 @@ with open('README.md', 'r') as file_obj:
 #by outside world.
 requirements = []
 with open('requirements.txt', 'r') as file_obj:
-    requirements = file_obj.read().split('\n')
+    requirements.extend(file_obj.read().split('\n'))
 
 setuptools.setup(
     name='llamas',
@@ -26,8 +26,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     package_data = {
         # include none .py project artifacts (e.g. cfg files)
-        '': ['config', '*.config', '*.cfg'],
+        '': ['config', '*.conf', '*.cfg'],
     },
+    include_package_data=True, #MUST HAVE for namespace_packages to pickup package_data
 
     install_requires=requirements,
 
