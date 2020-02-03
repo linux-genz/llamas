@@ -1,1 +1,2 @@
+git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2
 git+https://github.com/linux-genz/python3-alpaka.git@v0.1.2

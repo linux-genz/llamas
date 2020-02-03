@@ -10,8 +10,6 @@ with open('README.md', 'r') as file_obj:
 #This will help resolve dependencies recursively when this package added as such
 #by outside world.
 requirements = [
-    'flask_fat @ git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2',
-    'python3-alpaka @ git+https://github.hpe.com/atsugami-kun/python3-alpaka.git@zach_dev',
 ]
 with open('requirements.txt', 'r') as file_obj:
     requirements.extend(file_obj.read().split('\n'))
@@ -34,6 +32,7 @@ setuptools.setup(
 
     install_requires=requirements,
     dependency_links=[
+        'git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2',
         'git+https://github.com/linux-genz/python3-alpaka.git@v0.1.2'
     ],
 
