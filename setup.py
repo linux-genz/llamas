@@ -33,6 +33,9 @@ setuptools.setup(
     },
 
     install_requires=requirements,
+    dependency_links=[
+        'git+https://github.com/linux-genz/python3-alpaka.git@v0.1.2'
+    ],
 
     classifiers=[
         'Programming Language :: Python :: 3',
