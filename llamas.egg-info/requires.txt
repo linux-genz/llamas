@@ -1,3 +1,3 @@
-flask_fat@ git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2
 libnl>=0.2.0
-python3-alpaka@ git+https://github.com/linux-genz/python3-alpaka.git@zach_dev
+flask_fat@ git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2
+python3-alpaka@ git+https://github.com/linux-genz/python3-alpaka.git@v0.1
