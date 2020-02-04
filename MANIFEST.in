@@ -1,0 +1,3 @@
+include blueprints/device/blueprint.py
+include blueprints/help/blueprint.py
+include blueprints/info/blueprint.py
