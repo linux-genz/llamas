@@ -24,11 +24,12 @@ setuptools.setup(
     long_description=long_dsc,
     long_description_content_type='text/markdown',
     url='https://github.hpe.com/atsugami-kun/flask-api-template',
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_namespace_packages(),
     package_data = {
         # include none .py project artifacts (e.g. cfg files)
-        '': ['config', '*.config', '*.cfg'],
+        '': ['config', '*.conf', '*.cfg'],
     },
+    include_package_data=True, #MUST HAVE for namespace_packages to pickup package_data
 
     install_requires=requirements,
     dependency_links=[
