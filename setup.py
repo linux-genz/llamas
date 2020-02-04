@@ -9,8 +9,7 @@ with open('README.md', 'r') as file_obj:
 # Get dependencies from the requirements.txt and set it to install_requires prop.
 #This will help resolve dependencies recursively when this package added as such
 #by outside world.
-requirements = [
-]
+requirements = []
 with open('requirements.txt', 'r') as file_obj:
     requirements.extend(file_obj.read().split('\n'))
 
@@ -32,10 +31,6 @@ setuptools.setup(
     include_package_data=True, #MUST HAVE for namespace_packages to pickup package_data
 
     install_requires=requirements,
-    dependency_links=[
-        'git+https://github.com/ProjectVellum/flask-api-template.git@v0.1.2',
-        'git+https://github.com/linux-genz/python3-alpaka.git@v0.1.2'
-    ],
 
     classifiers=[
         'Programming Language :: Python :: 3',
