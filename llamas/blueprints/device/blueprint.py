@@ -2,11 +2,9 @@
 import flask
 import os
 import json
-# import jsonschema
 import posixpath
 import requests as HTTP_REQUESTS
 import logging
-# import uuid
 import socket
 import time
 import threading
@@ -44,9 +42,11 @@ class DeviceJournal(flask_fat.Journal):
         this_hostname = self.mainapp.config.get('THIS_HOSTNAME', None)
         if this_hostname is None:
             this_hostname = socket.gethostname()
+        if ':' not in this_hostname:
+            this_hostname = '%s:%s' % (this_hostname, port)
 
         callback_endpoint = posixpath.join('http://',
-                                '%s:%s' % (this_hostname, port),
+                                this_hostname,
                                 # '%s:%s' % ('localhost', port),
                                 'api/v1',
                                 self.name,
