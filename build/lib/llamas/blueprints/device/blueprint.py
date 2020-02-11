@@ -2,17 +2,17 @@
 import flask
 import os
 import json
-# import jsonschema
 import posixpath
 import requests as HTTP_REQUESTS
 import logging
-# import uuid
 import socket
 import time
 import threading
 from pdb import set_trace
 
 import flask_fat
+from llamas.utils import utils
+
 
 class DeviceJournal(flask_fat.Journal):
 
@@ -43,10 +43,14 @@ class DeviceJournal(flask_fat.Journal):
         url = cfg['ENDPOINTS']['event_add_cmp']
         this_hostname = self.mainapp.config.get('THIS_HOSTNAME', None)
         if this_hostname is None:
-            this_hostname = socket.gethostname()
+            this_hostname = 'http://localhost'
 
-        callback_endpoint = posixpath.join('http://',
-                                '%s:%s' % (this_hostname, port),
+        if not utils.is_port_in_url(this_hostname):
+            this_hostname = '%s:%s' % (this_hostname, port)
+        if utils.is_valid_url(this_hostname) is False:
+            raise RuntimeError('Invalid THIS_HOSTNAME url in config: %s ' % this_hostname)
+
+        callback_endpoint = posixpath.join(this_hostname,
                                 # '%s:%s' % ('localhost', port),
                                 'api/v1',
                                 self.name,
@@ -103,14 +107,15 @@ def add_cmp():
     nl = Journal.mainapp.netlink
     body = flask.request.form
     if not body:
-        #this happenes when using flask's test_client. It stors post data into
+        #this happenes when using flask's test_client. It stores post data into
         #.data as a json string.
         body = json.loads(flask.request.data)
 
     cmd_name = nl.cfg.get('ADD')
     msg = nl.build_msg(cmd_name, data=body)
+    pid = msg.get('pid', -1)
 
-    logging.info('Sending PID=%d; cmd=%s' % (msg['pid'], cmd_name))
+    logging.info('Sending PID=%d; cmd=%s' % (pid, cmd_name))
     #FIXME: move this try/except into a function out of here
     try:
         # If it works, get a packet.  If not, raise an error.

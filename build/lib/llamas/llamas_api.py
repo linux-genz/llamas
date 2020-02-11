@@ -6,7 +6,7 @@ import logging
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
 import flask_fat
-from flask_fat.config_builder import ConfigBuilder
+from flask_fat import ConfigBuilder
 
 from llamas import middleware
 logging.basicConfig(level=logging.DEBUG)
@@ -15,10 +15,10 @@ class LlamasServer(flask_fat.APIBaseline):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.alpaka_cfg_builder = ConfigBuilder(self.name, 'alpaka.conf')
-        cfg_path = kwargs.get('alpaka_cfg', None)
-        if cfg_path is None:
-            cfg_path = self.alpaka_cfg_builder.priority_cfg_path
+        self.alpaka_cfg_builder = ConfigBuilder('alpaka',
+                                            self.__file__,
+                                            path=kwargs.get('alpaka_cfg', None))
+        cfg_path = self.alpaka_cfg_builder.priority_path
 
         # try:
         self.netlink = middleware.NetlinkManager(config=cfg_path)
@@ -36,7 +36,9 @@ def parse_cmd():
                         help='increase output verbosity')
     parser.add_argument('-c', '--cfg', default=None,
                             help='Path to a llamas RestAPI server config.')
-    parser.add_argument('-a', '--alpaka-cfg', default=None,
+    parser.add_argument('--logging-cfg', default=None,
+                            help='Path to a python3.logging config.')
+    parser.add_argument('--alpaka-cfg', default=None,
                             help='Path to an alpaka config.')
 
     parsed = parser.parse_args()
