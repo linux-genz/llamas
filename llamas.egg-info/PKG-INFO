@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: llamas
-Version: 0.1
+Version: 0.1.5
 Summary: An event subscribtion Redfish rough emulator.
 Home-page: https://github.hpe.com/atsugami-kun/flask-api-template
 Author: Zach Volchak
