@@ -27,6 +27,7 @@ class LlamasServer(flask_fat.APIBaseline):
         #     logging.error(msg)
         #     raise RuntimeError(msg)
 
+
 def parse_cmd():
     parser = argparse.ArgumentParser()
     parser.add_argument('--ignore',
@@ -35,11 +36,16 @@ def parse_cmd():
     parser.add_argument('-v', '--verbosity', action='count', default=0,
                         help='increase output verbosity')
     parser.add_argument('-c', '--cfg', default=None,
-                            help='Path to a llamas RestAPI server config.')
+                        help='Path to a llamas RestAPI server config.')
     parser.add_argument('--logging-cfg', default=None,
-                            help='Path to a python3.logging config.')
+                        help='Path to a python3.logging config.')
     parser.add_argument('--alpaka-cfg', default=None,
-                            help='Path to an alpaka config.')
+                        help='Path to an alpaka config.')
+    parser.add_argument('--alias', default=None,
+                        help='This server alias name to use for the event subscription.')
+    parser.add_argument('--event-add', default=None,
+                        help='Add Event subscription endpoint. This will ' +\
+                            'override the config ENDPOINTS value.')
 
     parsed = parser.parse_args()
     if parsed.ignore is not None:
