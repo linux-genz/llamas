@@ -36,6 +36,7 @@ def parse_cmd():
     parser.add_argument('-v', '--verbosity', action='count', default=0,
                         help='increase output verbosity')
     parser.add_argument('-c', '--cfg', default=None,
+
                         help='Path to a llamas RestAPI server config.')
     parser.add_argument('--logging-cfg', default=None,
                         help='Path to a python3.logging config.')

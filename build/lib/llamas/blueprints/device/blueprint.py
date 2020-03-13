@@ -53,7 +53,6 @@ class DeviceJournal(flask_fat.Journal):
         if utils.is_valid_url(this_hostname) is False:
             raise RuntimeError('Invalid THIS_HOSTNAME url in config: %s ' % this_hostname)
 
-
         callback_endpoint = posixpath.join(this_hostname,
                                 # '%s:%s' % ('localhost', port),
                                 'api/v1',
