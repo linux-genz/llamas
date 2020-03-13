@@ -40,7 +40,10 @@ class DeviceJournal(flask_fat.Journal):
 
         cfg = self.mainapp.config
         port = cfg['PORT']
+
         url = cfg['ENDPOINTS']['event_add_cmp']
+        url = self.mainapp.kwargs.get('event_add', None)
+
         this_hostname = self.mainapp.config.get('THIS_HOSTNAME', None)
         if this_hostname is None:
             this_hostname = 'http://localhost'
@@ -57,11 +60,12 @@ class DeviceJournal(flask_fat.Journal):
                                 'add')
 
         data = {
-            'callback' : callback_endpoint
+            'callback' : callback_endpoint,
+            'alias' : self.mainapp.kwargs.get('alias', '')
         }
 
         try:
-            resp = HTTP_REQUESTS.post(url, data)
+            resp = HTTP_REQUESTS.post(url, data, json=data)
         except Exception as err:
             resp = None
             logging.debug('subscribe_to_redfish(): %s' % err)
@@ -75,7 +79,7 @@ class DeviceJournal(flask_fat.Journal):
         else:
             logging.error('---- !!ERROR!! Failed to subscribe to redfish event! ---- ')
             if resp is not None:
-                #FIXME: log the actuall status message from the response
+                #FIXME: log the actual status message from the response
                 logging.debug('subscription error reason [%s]: %s' %\
                                 (resp.status_code, resp.reason))
 
