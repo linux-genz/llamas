@@ -33,7 +33,7 @@ class ModelAddComponent(genlmsg):
     # upon. This needs further research, maybe in pyroute2 itself.
     nla_map = (
         ('UnUsed',            'none'),
-        ('GENZ_A_FABRIC_NUM',    'uint32'),
+        ('GENZ_A_BRIDGE_GCID', 'uint32'),
         ('GENZ_A_GCID',    'uint32'),
         ('GENZ_A_CCLASS',  'uint16'),
         ('GENZ_A_FRU_UUID',    'string'),

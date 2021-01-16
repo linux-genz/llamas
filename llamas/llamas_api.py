@@ -3,6 +3,9 @@ import argparse
 import os
 import json
 import logging
+from pathlib import Path
+from uuid import UUID
+from pdb import set_trace
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
 import flask_fat
@@ -53,11 +56,45 @@ def parse_cmd():
         parsed.ignore = parsed.ignore.replace(' ', '').split(',')
     return vars(parsed)
 
+def get_gcid(comp_path):
+    gcid = comp_path / 'gcid'
+    with gcid.open(mode='r') as f:
+        return GCID(str=f.read().rstrip())
+
+def get_cuuid(comp_path):
+    cuuid = comp_path / 'c_uuid'
+    with cuuid.open(mode='r') as f:
+        return UUID(f.read().rstrip())
+
+def get_cclass(comp_path):
+    cclass = comp_path / 'cclass'
+    with cclass.open(mode='r') as f:
+        return int(f.read().rstrip())
+
+def get_serial(comp_path):
+    serial = comp_path / 'serial'
+    with serial.open(mode='r') as f:
+        return f.read().rstrip()
+
+def find_local_bridges():
+    sys_devices = Path('/sys/devices')
+    dev_fabrics = sys_devices.glob('genz*')
+    local_bridges = []
+    for fab in dev_fabrics:
+        bridges = fab.glob('bridge*')
+        for br in bridges:
+            cuuid = get_cuuid(br)
+            serial = get_serial(br)
+            local_bridges.append(str(cuuid) + ':' + serial)
+    return local_bridges
 
 def main(args=None):
     args = {} if args is None else args
     cmd = parse_cmd()
     args.update(cmd)
+
+    local_bridges = find_local_bridges()
+    args['bridges'] = local_bridges
 
     mainapp = LlamasServer('llamas', **args)
     if args.get('verbose', False):

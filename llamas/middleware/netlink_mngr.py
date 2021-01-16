@@ -18,20 +18,76 @@ class NetlinkManager(alpaka.Messenger):
         super().__init__(*args, **kwargs)
 
 
+    def build_mrl_list(self, resource):
+        mrl_attrs = []
+        for memory in resource['memory']:
+            pprint(memory)
+            GENZ_A_MRL = ['GENZ_A_MRL', {
+                'attrs':
+                [
+                    ['GENZ_A_MR_START', memory['start']],
+                    ['GENZ_A_MR_LENGTH', memory['length']],
+                    ['GENZ_A_MR_TYPE', memory['type']],
+                    ['GENZ_A_MR_RO_RKEY', memory['ro_rkey']],
+                    ['GENZ_A_MR_RW_RKEY', memory['rw_rkey']],
+                ]
+            },
+            ]#GENZ_A_MRL
+            mrl_attrs.append(GENZ_A_MRL)
+
+        mrl_list = [
+            'GENZ_A_U_MRL', {
+                'attrs' : mrl_attrs
+            }
+        ]
+        return mrl_list
+
+    def build_resource_list(self, data):
+        res_attrs = []
+        for res in data['resources']:
+            GENZ_A_UL = ['GENZ_A_UL', {
+                'attrs':
+                [
+                    ['GENZ_A_U_CLASS_UUID', uuid_str_to_bytearray(res['class_uuid'])],
+                    ['GENZ_A_U_INSTANCE_UUID', uuid_str_to_bytearray(res['instance_uuid'])],
+                    ['GENZ_A_U_CLASS', res['class']],
+                    self.build_mrl_list(res),
+                ]
+            },
+            ]#GENZ_A_UL
+            res_attrs.append(GENZ_A_UL)
+
+        res_list = [
+            'GENZ_A_RESOURCE_LIST', {
+                'attrs' : res_attrs
+            }
+        ]
+        return res_list
+
     def build_msg(self, cmd, **kwargs):
         """
-            @param cmd->data: {
+            @param kwargs->data: {
                 'gcid': init.uuid.gcid,
-                'cclass': 11, # block storage (non-boot)
-                'fabric': 5,
+                'cclass': 2, # Memory (Explicit OpClass)
                 'mgr_uuid': '9af8190f-1b4c-4be8-8732-e8d48e883396',
-                'fru_uuid': 0,
+                'fru_uuid': '00000000-0000-0000-0000-000000000000',
 
-                'resources': {
-                    'uuid': str(init.uuid),
-                    'class': 0x2, #FIXME: hardcoded because reasons.Fabric Manager will figure it out
-                    'memory': memory
-                },
+                'resources': [
+                    {
+                      'class_uuid': str(init.uuid), # driver matched against this
+                      'instance_uuid': str(init.uuid),
+                      'class': 11, # block storage (non-boot)
+                      'memory': [
+                          {
+                            'start': 'number',
+                            'length': 'number',
+                            'type': 'number',  # 0 = GENZ_CONTROL, 1 = GENZ_DATA
+                            'ro_rkey': 'number',
+                            'rw_rkey': 'number',
+                          }
+                      ]
+                    },
+                ]
             }
         """
         """ Overriding alpaka's function.
@@ -69,68 +125,13 @@ class NetlinkManager(alpaka.Messenger):
         super().build_msg(cmd, **kwargs)
         msg = self.msg_model()
 
-        #Convert a data structure into the parameters that kernel understands
-        # for key, value in data.items():
-        #     nl_key_name = contract[key] #key must be there at this point
-        #     if isinstance(value, str):
-        #         if value.isdigit():
-        #             #parse digit str into float or int. Assume '.' in str is a float.
-        #             if '.' in value: value = float(value)
-        #             else: value = int(value)
+        # Convert the passed json data into the netlink parameters that kernel understands
 
-        #     #This is a Hack to extract UUID! Wait for a precedent to break this.
-        #     if 'uuid' in nl_key_name.lower():
-        #         value = uuid.UUID(str(value)).bytes
-
-        #     attrs.append([ nl_key_name, value ])
-
-        attrs.append(['GENZ_A_FABRIC_NUM', data['fabric']])
         attrs.append(['GENZ_A_CCLASS', data['cclass']])
         attrs.append(['GENZ_A_GCID', data['gcid']])
         attrs.append(['GENZ_A_FRU_UUID', uuid_str_to_bytearray(data['fru_uuid'])])
         attrs.append(['GENZ_A_MGR_UUID', uuid_str_to_bytearray(data['mgr_uuid'])])
-
-        #FIXME: the message building below needs to be refactored somehow for
-        #better usability and reusability
-        mrl_attrs = []
-        for memory in data['resources']['memory']:
-            pprint(memory)
-            GENZ_A_MRL = ['GENZ_A_MRL', {
-                    'attrs' :
-                    [
-                        ['GENZ_A_MR_CLASS', memory['cclass']],
-                        ['GENZ_A_MR_START', memory['start']],
-                        ['GENZ_A_MR_LENGTH', memory['length']],
-                        ['GENZ_A_MR_TYPE', memory['type']],
-                    ]
-                },
-            ]#GENZ_A_MRL
-            mrl_attrs.append(GENZ_A_MRL)
-
-        mrl_list = [
-            'GENZ_A_U_MRL', {
-                'attrs' : mrl_attrs
-            }#resource list
-        ]
-
-        attrs.append([
-            'GENZ_A_RESOURCE_LIST', {
-                'attrs' : [
-                    [
-                        'GENZ_A_UL', {
-                            'attrs' : [
-                                #hardcoded value: 3cb8d3bd-51ba-4586-835f-3548789dd906
-                                ['GENZ_A_U_CLASS_UUID', uuid_str_to_bytearray(data['resources']['class_uuid'])],
-                                #set by useing user_send3 --uuid param
-                                ['GENZ_A_U_INSTANCE_UUID', uuid_str_to_bytearray(data['resources']['instance_uuid'])],
-                                ['GENZ_A_U_CLASS', data['resources']['class']],
-                                mrl_list,
-                            ]
-                        },
-                    ],
-                ],#attrs
-            }#resource list
-        ])
+        attrs.append(self.build_resource_list(data))
 
         msg['attrs'] = attrs
         msg['cmd'] = cmd_index
