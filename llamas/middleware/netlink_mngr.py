@@ -5,7 +5,6 @@ import uuid
 import logging
 import os
 
-from pprint import pprint
 from pdb import set_trace
 
 import alpaka
@@ -21,7 +20,6 @@ class NetlinkManager(alpaka.Messenger):
     def build_mrl_list(self, resource):
         mrl_attrs = []
         for memory in resource['memory']:
-            pprint(memory)
             GENZ_A_MRL = ['GENZ_A_MRL', {
                 'attrs':
                 [

@@ -163,6 +163,7 @@ def add_cmp():
     pid = msg.get('pid', -1)
 
     logging.info('Sending netlink PID=%d; cmd=%s' % (pid, cmd_name))
+    logging.debug('netlink msg={}'.format(msg))
     #FIXME: move this try/except into a function out of here
     try:
         # If it works, get a packet.  If not, raise an error.

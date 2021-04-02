@@ -2,19 +2,20 @@ version: 1
 disable_existing_loggers: False
 formatters:
   full:
-    format: '%(pathname)s : %(lineno)d : %(levelname)s : %(message)s'
+    format: '%(asctime)s %(name)s %(filename)s:%(lineno)d | %(levelname)s | %(message)s'
   simple:
-    format: '%(levelname)s | - %(message)s'
+    format: '%(levelname)s | %(name)s: %(message)s'
 handlers:
   console:
     class: logging.StreamHandler
+    level: DEBUG
     formatter: simple
     stream: ext://sys.stdout
-  info_file_handler:
+  file_handler:
     class: logging.handlers.RotatingFileHandler
-    level: 0
+    level: DEBUG
     formatter: full
-    filename: /home/zvolchak/flask_fat.log
+    filename: /var/log/llamas.log
     maxBytes: 10485760 # 10MB
     backupCount: 20
     encoding: utf8
@@ -22,8 +23,8 @@ handlers:
 loggers:
   FlaskFatLog:
     level: DEBUG
-    handlers: [console, info_file_handler]
-    propagate: no
+    handlers: [console, file_handler]
+    propagate: false
 
 root:
-    handlers: [console, info_file_handler]
+    handlers: [console, file_handler]
