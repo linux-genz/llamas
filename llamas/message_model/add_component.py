@@ -53,6 +53,7 @@ class ModelAddComponent(genlmsg):
                 ('GENZ_A_UL_UNSPEC', 'none'),
                 ('GENZ_A_U_CLASS_UUID', 'string'),
                 ('GENZ_A_U_INSTANCE_UUID', 'string'),
+                ('GENZ_A_U_FLAGS', 'uint64'),
                 ('GENZ_A_U_CLASS', 'uint16'),
                 ('GENZ_A_U_MRL', 'mrl'),
             )

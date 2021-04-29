@@ -9,6 +9,7 @@
             {
                 "class_uuid": ["GENZ_A_U_CLASS_UUID", "string"],
                 "instance_uuid": ["GENZ_A_U_INSTANCE_UUID", "string"],
+                "flags": ["GENZ_A_U_FLAGS", "uint64"],
                 "class": ["GENZ_A_U_CLASS", "uint16"],
                 "memory": [
                 "GENZ_A_U_MRL",

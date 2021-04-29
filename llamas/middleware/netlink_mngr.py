@@ -48,6 +48,7 @@ class NetlinkManager(alpaka.Messenger):
                 [
                     ['GENZ_A_U_CLASS_UUID', uuid_str_to_bytearray(res['class_uuid'])],
                     ['GENZ_A_U_INSTANCE_UUID', uuid_str_to_bytearray(res['instance_uuid'])],
+                    ['GENZ_A_U_FLAGS', res['flags']],
                     ['GENZ_A_U_CLASS', res['class']],
                     self.build_mrl_list(res),
                 ]
@@ -74,6 +75,7 @@ class NetlinkManager(alpaka.Messenger):
                     {
                       'class_uuid': str(init.uuid), # driver matched against this
                       'instance_uuid': str(init.uuid),
+                      'flags': 0,
                       'class': 11, # block storage (non-boot)
                       'memory': [
                           {
