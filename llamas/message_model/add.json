@@ -1,7 +1,10 @@
 {
     "add": {
+        "br_gcid": ["GENZ_A_BRIDGE_GCID", "uint32"],
         "gcid": ["GENZ_A_GCID",    "uint32"],
+        "serial": ["GENZ_A_SERIAL",  "uint64"],
         "cclass": ["GENZ_A_CCLASS",  "uint16"],
+        "cuuid": ["GENZ_A_CUUID",    "string"],
         "fru_uuid": ["GENZ_A_FRU_UUID",    "string"],
         "mgr_uuid": ["GENZ_A_MGR_UUID",    "string"],
         "resources": [

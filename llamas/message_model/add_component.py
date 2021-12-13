@@ -32,12 +32,14 @@ class ModelAddComponent(genlmsg):
     # Zero-based arrays are sort-of needed here, but also somewhat frowned
     # upon. This needs further research, maybe in pyroute2 itself.
     nla_map = (
-        ('UnUsed',            'none'),
+        ('UnUsed',             'none'),
         ('GENZ_A_BRIDGE_GCID', 'uint32'),
-        ('GENZ_A_GCID',    'uint32'),
-        ('GENZ_A_CCLASS',  'uint16'),
+        ('GENZ_A_GCID',        'uint32'),
+        ('GENZ_A_CCLASS',      'uint16'),
         ('GENZ_A_FRU_UUID',    'string'),
         ('GENZ_A_MGR_UUID',    'string'),
+        ('GENZ_A_CUUID',       'string'),
+        ('GENZ_A_SERIAL',      'uint64'),
         ('GENZ_A_RESOURCE_LIST', 'resources'),
     ),
 

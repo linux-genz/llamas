@@ -54,11 +54,11 @@ class DeviceJournal(flask_fat.Journal):
     #def on_post_register(self):
     #    self.subscribe_to_redfish()
 
-    def endpoint_url(self):
+    def endpoint_url(self, name):
         cfg = self.mainapp.config
         port = cfg['PORT']
-        url = cfg['ENDPOINTS']['event_add_cmp']
-        mainapp_url = self.mainapp.kwargs.get('event_add', None)
+        url = cfg['ENDPOINTS']['event_{}_cmp'.format(name)]
+        mainapp_url = self.mainapp.kwargs.get('event_{}'.format(name), None)
         if mainapp_url is not None:
             url = mainapp_url
 
@@ -75,7 +75,7 @@ class DeviceJournal(flask_fat.Journal):
                                 # '%s:%s' % ('localhost', port),
                                 'api/v1',
                                 self.name,
-                                'add')
+                                name)
 
         return (url, callback_endpoint)
 
@@ -83,39 +83,64 @@ class DeviceJournal(flask_fat.Journal):
         if self._is_subscribed: # already subscribed
             return
 
-        url, callback_endpoint = self.endpoint_url()
         bridges = self.mainapp.kwargs.get('bridges', [])
 
-        data = {
-            'callback' : callback_endpoint,
+        # Revisit: generalize this for an arbitrary number of endpoints
+        add_url, add_callback_endpoint = self.endpoint_url('add')
+        add_data = {
+            'callback' : add_callback_endpoint,
             'alias' : self.mainapp.kwargs.get('alias', ''),
             'bridges': bridges
         }
 
         try:
-            resp = HTTP_REQUESTS.post(url, json=data)
+            resp_add = HTTP_REQUESTS.post(add_url, json=add_data)
         except Exception as err:
-            resp = None
+            resp_add = None
             logging.debug('subscribe_to_redfish(): %s' % err)
 
-        is_success = resp is not None and resp.status_code < 300
+        is_success_add = resp_add is not None and resp_add.status_code < 300
 
-        if is_success:
+        remove_url, remove_callback_endpoint = self.endpoint_url('remove')
+        remove_data = {
+            'callback' : remove_callback_endpoint,
+            'alias' : self.mainapp.kwargs.get('alias', ''),
+            'bridges': bridges
+        }
+
+        try:
+            resp_rm = HTTP_REQUESTS.post(remove_url, json=remove_data)
+        except Exception as err:
+            resp_rm = None
+            logging.debug('subscribe_to_redfish(): %s' % err)
+
+        is_success_remove = resp_rm is not None and resp_rm.status_code < 300
+
+        if is_success_add and is_success_remove:
             self._is_subscribed = True
             self._subscribe_timer.stop()
             logging.info('--- Subscribed to %s to callback at %s' % \
-                        (url, callback_endpoint))
+                        (add_url, add_callback_endpoint))
+            logging.info('--- Subscribed to %s to callback at %s' % \
+                        (remove_url, remove_callback_endpoint))
         else:
-            logging.error('---- !!ERROR!! Failed to subscribe to redfish event! {} {} ---- '.format(url, callback_endpoint))
-            if resp is not None:
-                #FIXME: log the actual status message from the response
-                logging.error('subscription error reason [%s]: %s' %\
-                                (resp.status_code, resp.reason))
+            if not is_success_add:
+                logging.error('---- !!ERROR!! Failed to subscribe to redfish event! {} {} ---- '.format(add_url, add_callback_endpoint))
+                if resp_add is not None:
+                    #FIXME: log the actual status message from the response
+                    logging.error('subscription error reason [%s]: %s' %\
+                                  (resp_add.status_code, resp_add.reason))
+            if not is_success_add:
+                logging.error('---- !!ERROR!! Failed to subscribe to redfish event! {} {} ---- '.format(add_url, add_callback_endpoint))
+                if resp_rm is not None:
+                    #FIXME: log the actual status message from the response
+                    logging.error('subscription error reason [%s]: %s' %\
+                                  (resp_rm.status_code, resp_rm.reason))
 
             self._subscribe_timer.start(interval=cfg.get('SUBSCRIBE_INTERVAL', 5))
 
     def check_server_ready(self):
-        _, endpoint = self.endpoint_url()
+        _, endpoint = self.endpoint_url('add')
         try:
             resp = HTTP_REQUESTS.get(endpoint, timeout=0.1)
             logging.debug('GET {} returned {}'.format(endpoint, resp))
@@ -159,6 +184,65 @@ def add_cmp():
         body = json.loads(flask.request.data)
 
     cmd_name = nl.cfg.get('ADD')
+    msg = nl.build_msg(cmd_name, data=body)
+    pid = msg.get('pid', -1)
+
+    logging.info('Sending netlink PID=%d; cmd=%s' % (pid, cmd_name))
+    logging.debug('netlink msg={}'.format(msg))
+    #FIXME: move this try/except into a function out of here
+    try:
+        # If it works, get a packet.  If not, raise an error.
+        retval = nl.sendmsg(msg)
+        resperr = retval[0]['header']['error']
+        if resperr:
+            logging.error(retval)
+            response['error'] = resperr
+            code = 400
+        else:
+            status = 'success'
+            code = 200
+    except Exception as exc:
+        response['error'] = str(exc)
+        code = 401
+
+    if code < 300:
+        response['msg'] = {
+            'cmd' : msg['cmd'],
+            #convert pyroute2.netlink.nla_slot into tuple
+            'attr' : [tuple(item) for item in msg['attrs']]
+        }
+
+    response['status'] = status
+    return flask.make_response(flask.jsonify(str(response)), code)
+
+
+@Journal.BP.route('/%s/remove' % (Journal.name), methods=['GET', 'POST'])
+def remove_cmp():
+    """
+        Return nodes ID this API is running on.
+    @param req.body: {
+        'gcid' : <value>,
+        'cclass' : <value>,
+        'uuid' : <value>,
+    }
+    """
+    logging.info('%s %s/remove route is called.' % (flask.request.method, Journal.name))
+    response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
+    status = 'nothing happened'
+    if flask.request.method == 'GET':
+        code = 200
+        status = 'success'
+        response['status'] = status
+        return flask.make_response(flask.jsonify(str(response)), code)
+    code = 300
+    nl = Journal.mainapp.netlink
+    body = flask.request.form
+    if not body:
+        #this happens when using flask's test_client. It stores post data into
+        #.data as a json string.
+        body = json.loads(flask.request.data)
+
+    cmd_name = nl.cfg.get('REMOVE')
     msg = nl.build_msg(cmd_name, data=body)
     pid = msg.get('pid', -1)
 

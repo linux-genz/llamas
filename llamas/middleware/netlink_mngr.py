@@ -66,8 +66,11 @@ class NetlinkManager(alpaka.Messenger):
     def build_msg(self, cmd, **kwargs):
         """
             @param kwargs->data: {
+                'br_gcid': bridge.gcid,
                 'gcid': init.uuid.gcid,
+                'serial': 12345678,
                 'cclass': 2, # Memory (Explicit OpClass)
+                'cuuid':    'e3331770-6648-4def-8100-404d844298d3',
                 'mgr_uuid': '9af8190f-1b4c-4be8-8732-e8d48e883396',
                 'fru_uuid': '00000000-0000-0000-0000-000000000000',
 
@@ -129,6 +132,9 @@ class NetlinkManager(alpaka.Messenger):
 
         attrs.append(['GENZ_A_CCLASS', data['cclass']])
         attrs.append(['GENZ_A_GCID', data['gcid']])
+        attrs.append(['GENZ_A_BRIDGE_GCID', data['br_gcid']])
+        attrs.append(['GENZ_A_SERIAL', data['serial']])
+        attrs.append(['GENZ_A_CUUID', uuid_str_to_bytearray(data['cuuid'])])
         attrs.append(['GENZ_A_FRU_UUID', uuid_str_to_bytearray(data['fru_uuid'])])
         attrs.append(['GENZ_A_MGR_UUID', uuid_str_to_bytearray(data['mgr_uuid'])])
         attrs.append(self.build_resource_list(data))
