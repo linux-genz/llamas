@@ -4,6 +4,7 @@ import os
 import json
 import posixpath
 import requests as HTTP_REQUESTS
+from requests.exceptions import ConnectionError
 import logging
 import socket
 import time
@@ -95,9 +96,15 @@ class DeviceJournal(flask_fat.Journal):
 
         try:
             resp_add = HTTP_REQUESTS.post(add_url, json=add_data)
+        except ConnectionError as err:
+            resp_add = None
+            retry = self.mainapp.config.get('SUBSCRIBE_INTERVAL', 5)
+            logging.debug(f'retry subscribe_to_redfish() in {retry} seconds: {err}')
+            self._subscribe_timer.start(interval=retry)
+            return
         except Exception as err:
             resp_add = None
-            logging.debug('subscribe_to_redfish(): %s' % err)
+            logging.debug(f'subscribe_to_redfish(): {err}')
 
         is_success_add = resp_add is not None and resp_add.status_code < 300
 
@@ -108,36 +115,33 @@ class DeviceJournal(flask_fat.Journal):
             'bridges': bridges
         }
 
+        # Revisit: if resp_add failed, why do resp_rm?
         try:
             resp_rm = HTTP_REQUESTS.post(remove_url, json=remove_data)
         except Exception as err:
             resp_rm = None
-            logging.debug('subscribe_to_redfish(): %s' % err)
+            logging.debug(f'subscribe_to_redfish(): {err}')
 
         is_success_remove = resp_rm is not None and resp_rm.status_code < 300
 
         if is_success_add and is_success_remove:
             self._is_subscribed = True
             self._subscribe_timer.stop()
-            logging.info('--- Subscribed to %s to callback at %s' % \
-                        (add_url, add_callback_endpoint))
-            logging.info('--- Subscribed to %s to callback at %s' % \
-                        (remove_url, remove_callback_endpoint))
+            logging.info(f'--- Subscribed to {add_url}, callback at {add_callback_endpoint}')
+            logging.info(f'--- Subscribed to {remove_url}, callback at {remove_callback_endpoint}')
         else:
             if not is_success_add:
-                logging.error('---- !!ERROR!! Failed to subscribe to redfish event! {} {} ---- '.format(add_url, add_callback_endpoint))
+                logging.error('---- Failed to subscribe to redfish event! {} {} ---- '.format(add_url, add_callback_endpoint))
                 if resp_add is not None:
                     #FIXME: log the actual status message from the response
                     logging.error('subscription error reason [%s]: %s' %\
                                   (resp_add.status_code, resp_add.reason))
-            if not is_success_add:
-                logging.error('---- !!ERROR!! Failed to subscribe to redfish event! {} {} ---- '.format(add_url, add_callback_endpoint))
+            if not is_success_remove:
+                logging.error('---- Failed to subscribe to redfish event! {} {} ---- '.format(remove_url, remove_callback_endpoint))
                 if resp_rm is not None:
                     #FIXME: log the actual status message from the response
                     logging.error('subscription error reason [%s]: %s' %\
                                   (resp_rm.status_code, resp_rm.reason))
-
-            self._subscribe_timer.start(interval=cfg.get('SUBSCRIBE_INTERVAL', 5))
 
     def check_server_ready(self):
         _, endpoint = self.endpoint_url('add')
@@ -146,7 +150,7 @@ class DeviceJournal(flask_fat.Journal):
             logging.debug('GET {} returned {}'.format(endpoint, resp))
             self._ready_timer.stop()
             self.subscribe_to_redfish()
-        except HTTP_REQUESTS.exceptions.ConnectionError:
+        except ConnectionError:
             logging.debug('GET {} ConnectionError - restarting ready_timer'.format(endpoint))
             self._ready_timer.start()
 
@@ -167,7 +171,7 @@ def add_cmp():
         'uuid' : <value>,
     }
     """
-    logging.info('%s %s/add route is called.' % (flask.request.method, Journal.name))
+    logging.info(f'{flask.request.method} {Journal.name}/add is called.')
     response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
     status = 'nothing happened'
     if flask.request.method == 'GET':
@@ -226,7 +230,7 @@ def remove_cmp():
         'uuid' : <value>,
     }
     """
-    logging.info('%s %s/remove route is called.' % (flask.request.method, Journal.name))
+    logging.info(f'{flask.request.method} {Journal.name}/remove is called.')
     response = { 'msg' : { 'cmd' : -1, 'attr' : [] } }
     status = 'nothing happened'
     if flask.request.method == 'GET':
