@@ -28,6 +28,7 @@ def get_nodes():
         Return [{ 'node_name' : 'node_id' }] list of all currently known nodesids to
     this API.
     """
+    # Revisit: this is broken
     endpoints = Journal.mainapp.config['ENDPOINTS']
     url = os.path.join(endpoints['base'], endpoints['registries'])
     registries = HTTP_REQUESTS.get(url)

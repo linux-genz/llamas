@@ -9,6 +9,7 @@ from pdb import set_trace
 
 import alpaka
 from llamas.message_model.add_component import ModelAddComponent
+from llamas.message_model.local_bridge import ModelLocalBridge
 
 
 class NetlinkManager(alpaka.Messenger):
@@ -109,6 +110,7 @@ class NetlinkManager(alpaka.Messenger):
         }
         """
         data = kwargs.get('data', None)
+        logging.debug(f'build_msg: cmd={cmd}, data={data}')
         attrs = []
         err_msg = 'build_msg required "%s" parameter is None or missing!'
         if cmd is None:
@@ -119,25 +121,43 @@ class NetlinkManager(alpaka.Messenger):
             return None
 
         cmd_index = self.cfg.cmd_opts.get(cmd)
+        logging.debug(f'build_msg: cmd_index={cmd_index}')
 
         contract = self.cfg.get('CONTRACT', {}).get(cmd_index)
         if contract is None:
             contract = data
 
-        kwargs['model'] = ModelAddComponent
+        local_bridge = self.cfg.get('LOCAL_BRIDGE')
+        if cmd == local_bridge:
+            kwargs['model'] = ModelLocalBridge
+        else:
+            kwargs['model'] = ModelAddComponent # also used for remove
         super().build_msg(cmd, **kwargs)
         msg = self.msg_model()
 
         # Convert the passed json data into the netlink parameters that kernel understands
 
-        attrs.append(['GENZ_A_CCLASS', data['cclass']])
-        attrs.append(['GENZ_A_GCID', data['gcid']])
-        attrs.append(['GENZ_A_BRIDGE_GCID', data['br_gcid']])
-        attrs.append(['GENZ_A_SERIAL', data['serial']])
-        attrs.append(['GENZ_A_CUUID', uuid_str_to_bytearray(data['cuuid'])])
-        attrs.append(['GENZ_A_FRU_UUID', uuid_str_to_bytearray(data['fru_uuid'])])
-        attrs.append(['GENZ_A_MGR_UUID', uuid_str_to_bytearray(data['mgr_uuid'])])
-        attrs.append(self.build_resource_list(data))
+        # Revisit: Fix the model/contract stuff above so we don't need this hack
+        if cmd == local_bridge: # LOCAL_BRIDGE/FABRIC_ADD
+            attrs.append(['GENZ_A_FC_GCID',         data['gcid']])
+            attrs.append(['GENZ_A_FC_BRIDGE_GCID',  data['br_gcid']])
+            attrs.append(['GENZ_A_FC_TEMP_GCID',    data['tmp_gcid']])
+            attrs.append(['GENZ_A_FC_DR_GCID',      data['dr_gcid']])
+            attrs.append(['GENZ_A_FC_DR_INTERFACE', data['dr_iface']])
+            attrs.append(['GENZ_A_FC_MGR_UUID',
+                          uuid_str_to_bytearray(data['mgr_uuid'])])
+        else: # OS_ADD/REMOVE
+            attrs.append(['GENZ_A_CCLASS',      data['cclass']])
+            attrs.append(['GENZ_A_GCID',        data['gcid']])
+            attrs.append(['GENZ_A_BRIDGE_GCID', data['br_gcid']])
+            attrs.append(['GENZ_A_SERIAL',      data['serial']])
+            attrs.append(['GENZ_A_CUUID',
+                          uuid_str_to_bytearray(data['cuuid'])])
+            attrs.append(['GENZ_A_FRU_UUID',
+                          uuid_str_to_bytearray(data['fru_uuid'])])
+            attrs.append(['GENZ_A_MGR_UUID',
+                          uuid_str_to_bytearray(data['mgr_uuid'])])
+            attrs.append(self.build_resource_list(data))
 
         msg['attrs'] = attrs
         msg['cmd'] = cmd_index
