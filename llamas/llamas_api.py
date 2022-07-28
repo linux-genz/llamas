@@ -5,9 +5,11 @@ import json
 import logging
 import re
 import socket
+import sys
 from pathlib import Path
 from uuid import UUID
 from genz.genz_common import GCID
+from setproctitle import getproctitle, setproctitle
 from pdb import set_trace
 
 #https://github.com/FabricAttachedMemory/flask-api-template.git
@@ -206,6 +208,9 @@ def find_local_bridges():
     return local_bridges
 
 def main(args=None):
+    script_name = Path(__file__).name
+    proc_title = script_name + ' ' + ' '.join(sys.argv[1:])
+    setproctitle(proc_title)
     args = {} if args is None else args
     cmd = parse_cmd()
     args.update(cmd)
