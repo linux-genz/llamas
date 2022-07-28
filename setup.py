@@ -15,7 +15,7 @@ with open('requirements.txt', 'r') as file_obj:
 
 setuptools.setup(
     name='llamas',
-    version='0.1.5',
+    version='0.5',
     license='GPLv2',
     author='Zach Volchak',
     author_email='zakhar.volchak@hpe.com',
