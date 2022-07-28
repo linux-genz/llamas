@@ -4,7 +4,7 @@ import os
 import json
 import posixpath
 import requests as HTTP_REQUESTS
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, Timeout
 import logging
 import socket
 import time
@@ -142,6 +142,9 @@ class DeviceJournal(flask_fat.Journal):
             logging.debug('check_server_ready: GET {} returned {}'.format(endpoint, resp))
             self._ready_timer.stop()
             self.zeroconf_setup()
+        except Timeout:
+            logging.debug('GET {} Timeout - restarting ready_timer'.format(endpoint))
+            self._ready_timer.start()
         except ConnectionError:
             logging.debug('GET {} ConnectionError - restarting ready_timer'.format(endpoint))
             self._ready_timer.start()
