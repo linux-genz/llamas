@@ -181,8 +181,11 @@ class Bridges():
             return None
 
     def match(self, mgr_uuid: UUID):
-        for br in self.by_mgr_uuid[mgr_uuid]:
-            yield br
+        try:
+            for br in self.by_mgr_uuid[mgr_uuid]:
+                yield br
+        except KeyError:
+            return
 
     def uninitialized(self):
         return self.match(MGR_UUID_0)
