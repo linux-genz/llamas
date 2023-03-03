@@ -54,6 +54,7 @@ class FM():
         if info.properties:
             self.fab_uuid = UUID(bytes=info.properties[b'fab_uuid'])
             self.mgr_uuid = UUID(bytes=info.properties[b'mgr_uuid'])
+            self.instance_uuid = UUID(bytes=info.properties[b'instance_uuid'])
             self.pfm = bool(int(info.properties[b'pfm']))
         self.bridges = []
 
@@ -173,7 +174,8 @@ class DeviceJournal(flask_fat.Journal):
         for br in uninit:
             local_bridges.update(br)
         for br in local_bridges.match(fm.mgr_uuid):
-            fm.bridges.append(br)
+            if br not in fm.bridges:
+                fm.bridges.append(br)
         if len(fm.bridges) > 0:
             self.subscribe_to_redfish(fm)
 
@@ -193,14 +195,35 @@ class DeviceJournal(flask_fat.Journal):
         logging.debug(f'Service {name} of type {type} Updated')
         info = zeroconf.get_service_info(type, name)
         logging.debug(f'Info from zeroconf.get_service_info: {info}')
+        info_instance_uuid = UUID(bytes=info.properties[b'instance_uuid'])
         unknown = False
+        new_instance = False
         try:
             fm = self.fms[name]
+            if info_instance_uuid != fm.instance_uuid:
+                fm.instance_uuid = info_instance_uuid
+                fm.is_subscribed = False
+                new_instance = True
         except KeyError:
-            logging.warning(f'attempt to update unknown FM {name}')
+            logging.warning(f'attempt to update unknown FM {name} - treating as add')
             unknown = True
             fm = FM(info) # treat as if this was an 'add'
-        # Revisit: finish this
+        # Revisit: refactor - similar to add_service
+        if not fm.pfm:
+            logging.info(f'ignoring non-PFM {name}')
+            return
+        local_bridges = self.mainapp.kwargs['bridges']
+        local_bridges.update_bridges()
+        # avoid "Set changed size during iteration"
+        uninit = [br for br in local_bridges.uninitialized()]
+        for br in uninit:
+            local_bridges.update(br)
+        for br in local_bridges.match(fm.mgr_uuid):
+            if br not in fm.bridges:
+                fm.bridges.append(br)
+        logging.debug(f'len(fm.bridges)={len(fm.bridges)}, unknown={unknown}, new_instance={new_instance}')
+        if len(fm.bridges) > 0 and (unknown or new_instance):
+            self.subscribe_to_redfish(fm)
 
 
 Journal = self = DeviceJournal(__file__, url_prefix='/api/v1')
