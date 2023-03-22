@@ -28,6 +28,10 @@ def component_num(comp_path):
     match = comp_num_re.match(str(comp_path))
     return int(match.group(2))
 
+def fabric_num(comp_path):
+    match = comp_num_re.match(str(comp_path.parent))
+    return int(match.group(2))
+
 class LlamasServer(flask_fat.APIBaseline):
 
     def __init__(self, *args, **kwargs):
@@ -113,12 +117,23 @@ class Bridge():
         self.path = path
         self.cuuid = get_cuuid(path)
         self.serial = get_serial(path)
+        self.fab = fabric_num(path)
         self.tmp_gcid = GCID(sid=TEMP_SUBNET, cid=component_num(path))
         self.hostname = socket.gethostname()
+
+    def update(self, path: Path):
+        '''Update this bridge's path and fix up its fab number
+        '''
+        self.path = path
+        self.fab = fabric_num(path)
 
     @property
     def cuuid_serial(self):
         return str(self.cuuid) + ':' + self.serial
+
+    @property
+    def gcid(self):
+        return get_gcid(self.path)
 
     @property
     def mgr_uuid(self):
@@ -171,7 +186,7 @@ class Bridges():
         for br in new_bridges:
             if br in self:
                 prev = self.find(br.cuuid_serial)
-                prev.path = br.path
+                prev.update(br.path)
             else:
                 self.add(br)
         # end for

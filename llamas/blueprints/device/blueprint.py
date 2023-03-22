@@ -395,6 +395,13 @@ def local_bridge():
         logging.error(status)
         response['status'] = status
         return flask.make_response(flask.jsonify(str(response)), code)
+    logging.debug(f"found bridge {br.cuuid_serial} with gcid {br.gcid} on fab {br.fab}")
+    if br.gcid.val == body['gcid'] and br.fab != 0:
+        logging.debug(f"local bridge {cuuid_serial} already moved to {br.fab}:{br.gcid}")
+        code = 200
+        status = 'already moved'
+        response['status'] = status
+        return flask.make_response(flask.jsonify(str(response)), code)
     body['tmp_gcid'] = br.tmp_gcid.val
     logging.debug(f"moving local bridge {cuuid_serial} with tmp_gcid {br.tmp_gcid} to {body['gcid']}")
     # add other items netlink requires
