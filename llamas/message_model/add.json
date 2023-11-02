@@ -22,7 +22,8 @@
                     "type": ["GENZ_A_MR_TYPE", "uint8"],
                     "ro_rkey": ["GENZ_A_MR_RO_RKEY", "uint32"],
                     "rw_rkey": ["GENZ_A_MR_RW_RKEY", "uint32"]
-                }
+                },
+                "reference_uuid": ["GENZ_A_U_REFERENCE_UUID", "string"]
                 ]
             }
         ]

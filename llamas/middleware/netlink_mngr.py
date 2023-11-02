@@ -11,6 +11,16 @@ import alpaka
 from llamas.message_model.add_component import ModelAddComponent
 from llamas.message_model.local_bridge import ModelLocalBridge
 
+def uuid_str_to_bytearray(uuid_str):
+    """
+        Convert a UUID string format (e.g. 00000000-0000-0000-0000-000000000000)
+    into bytes that netlink pyroute2 library can understand and send properly.
+    """
+    uuid_obj = uuid.UUID(uuid_str)
+    bytes = uuid_obj.bytes
+    return bytes
+
+zero_uuid = uuid_str_to_bytearray('00000000-0000-0000-0000-000000000000')
 
 class NetlinkManager(alpaka.Messenger):
 
@@ -49,6 +59,7 @@ class NetlinkManager(alpaka.Messenger):
                 [
                     ['GENZ_A_U_CLASS_UUID', uuid_str_to_bytearray(res['class_uuid'])],
                     ['GENZ_A_U_INSTANCE_UUID', uuid_str_to_bytearray(res['instance_uuid'])],
+                    ['GENZ_A_U_REFERENCE_UUID', uuid_str_to_bytearray(res['reference_uuid']) if 'reference_uuid' in res else zero_uuid],
                     ['GENZ_A_U_FLAGS', res['flags']],
                     ['GENZ_A_U_CLASS', res['class']],
                     self.build_mrl_list(res),
@@ -79,6 +90,7 @@ class NetlinkManager(alpaka.Messenger):
                     {
                       'class_uuid': str(init.uuid), # driver matched against this
                       'instance_uuid': str(init.uuid),
+                      'reference_uuid': str(init.uuid),
                       'flags': 0,
                       'class': 11, # block storage (non-boot)
                       'memory': [
@@ -164,16 +176,6 @@ class NetlinkManager(alpaka.Messenger):
         msg['pid'] = os.getpid()
         msg['version'] = self.cfg.version
         return msg
-
-
-def uuid_str_to_bytearray(uuid_str):
-    """
-        Convert a UUID string format (e.g. 00000000-0000-0000-0000-000000000000)
-    into bytes that netlink pyroute2 library can understand and send properly.
-    """
-    uuid_obj = uuid.UUID(uuid_str)
-    bytes = uuid_obj.bytes
-    return bytes
 
 
 # def YodelAyHeHUUID(random=True):
